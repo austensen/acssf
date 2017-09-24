@@ -1,5 +1,5 @@
 Package: acssf
-Title: Download ACS Summary File Data and Build Database.
+Title: Download ACS Summary File Data and Build Database
 Version: 0.0.0.9000
 Authors@R: person("Maxwell", "Austensen", email = "fmaxwell.austensen@nyu.edu", role = c("aut", "cre"))
 Description: Download ACS Summary File data from FTP site, clean data, and create tables in database.
@@ -7,9 +7,17 @@ Depends: R (>= 3.4.1)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Suggests: testthat,
+Suggests:
+    testthat,
     covr
-Imports: rvest
+Imports:
+    rvest,
+    dplyr,
+    purrr,
+    stringr,
+    glue,
+    xml2,
+    methods
 RoxygenNote: 6.0.1
 URL: https://github.com/austensen/acssf
 BugReports: https://github.com/austensen/acssf/issues

@@ -1,6 +1,6 @@
 # TODO: test for 3- & 5-year, add support for taking vector of geos
 
-download_acs <- function(endyear, span, geo, overwrite) {
+download_acs <- function(acs_dir, endyear, span, geo, overwrite) {
 
   dir.create(acs_dir, recursive = TRUE, showWarnings = FALSE)
 

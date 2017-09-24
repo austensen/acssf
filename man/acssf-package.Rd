@@ -9,6 +9,14 @@
 Download ACS Summary File data from FTP site, clean data and create tables in
 database.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/austensen/acssf}
+  \item Report bugs at \url{https://github.com/austensen/acssf/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Maxwell Austensen \email{fmaxwell.austensen@nyu.edu}
 

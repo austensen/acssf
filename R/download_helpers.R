@@ -12,12 +12,12 @@ scrape_filenames <- function(url, pattern = ".*") {
 # retries the download in case of error for specified number of times
 download_retry <- function(..., times = 2) {
   while (times >=0) {
-    ret <- try(download.file(...), silent = TRUE)
-    if(!is(ret, 'try-error')) break
+    ret <- try(utils::download.file(...), silent = TRUE)
+    if(!methods::is(ret, 'try-error')) break
     times <- times - 1
     if (times >=0) message("error in download, retrying...")
   }
-  if(is(ret, 'try-error')) stop(ret[[1]], call. = FALSE)
+  if(methods::is(ret, 'try-error')) stop(ret[[1]], call. = FALSE)
 }
 
 # Downloads Seq/Table/Var Info
@@ -34,7 +34,7 @@ download_docs <- function(doc_dir, endyear, span) {
     # get Seq/Table/Var info
     if (endyear >= 2006) {
 
-      docs_file_url <- case_when(
+      docs_file_url <- dplyr::case_when(
         endyear == 2006        ~ as.character(glue("{docs_base_url}/merge_5_6_final.xls")),
         endyear == 2007        ~ as.character(glue("{docs_base_url}/{span}_year/merge_5_6_final.xls")),
         endyear %in% 2008:2009 ~ as.character(glue("{docs_base_url}/{span}_year/user_tools/merge_5_6.xls")),
@@ -65,7 +65,7 @@ download_docs <- function(doc_dir, endyear, span) {
       shell_urls <- glue("{shell_base_url}/{shell_filenames}")
       shell_files <- glue("{doc_dir}/{shell_filenames}")
 
-      walk2(shell_urls, shell_files, download_retry, mode = "wb", quiet = TRUE)
+      purrr::walk2(shell_urls, shell_files, download_retry, mode = "wb", quiet = TRUE)
 
     }
 
@@ -85,11 +85,11 @@ download_docs <- function(doc_dir, endyear, span) {
       download_retry(templates_url, templates_file, quiet = TRUE)
 
       # unzip just the geography file
-      zipped_geo_file <- unzip(templates_file, list = TRUE) %>%
-        pull(Name) %>%
-        keep(str_detect, pattern = "SFGeoFileTemplate\\.xls$")
+      zipped_geo_file <- utils::unzip(templates_file, list = TRUE) %>%
+        dplyr::pull("Name") %>%
+        purrr::keep(stringr::str_detect, pattern = "SFGeoFileTemplate\\.xls$")
 
-      unzip(templates_file, files = zipped_geo_file, exdir = doc_dir, junkpaths = TRUE)
+      utils::unzip(templates_file, files = zipped_geo_file, exdir = doc_dir, junkpaths = TRUE)
     }
 
   }
@@ -115,20 +115,20 @@ download_data <- function(geo_dir, endyear, span, geo_name) {
       data_file <- glue("{geo_dir}/{data_filename}")
 
       download_retry(data_url, data_file, quiet = TRUE)
-      unzip(data_file, exdir = geo_dir, junkpaths = TRUE)
+      utils::unzip(data_file, exdir = geo_dir, junkpaths = TRUE)
 
 
     } else if (endyear <= 2008) {
 
       # get data files (including geographies)
 
-      data_base_url <- case_when(
+      data_base_url <- dplyr::case_when(
         endyear == 2005 & geo_name == "UnitedStates" ~ as.character(glue("{base_url}/data/0UnitedStates")),
         endyear %in% 2005:2006                       ~ as.character(glue("{base_url}/data/{geo_name}")),
         endyear %in% 2007:2008                       ~ as.character(glue("{base_url}/data/{span}_year/{geo_name}"))
       )
 
-      data_file_pattern <- case_when(
+      data_file_pattern <- dplyr::case_when(
         endyear %in% 2005      ~ "\\.2005-1yr",
         endyear %in% 2006:2008 ~ as.character(glue("{endyear}{span}"))
       )
@@ -138,8 +138,8 @@ download_data <- function(geo_dir, endyear, span, geo_name) {
       data_urls <- glue('{data_base_url}/{data_filenames}')
       data_files <- glue("{geo_dir}/{data_filenames}")
 
-      walk2(data_urls, data_files, download_retry, quiet = TRUE)
-      walk(data_files, unzip, exdir = geo_dir, junkpaths = TRUE)
+      purrr::walk2(data_urls, data_files, download_retry, quiet = TRUE)
+      purrr::walk(data_files, utils::unzip, exdir = geo_dir, junkpaths = TRUE)
 
     }
   }
