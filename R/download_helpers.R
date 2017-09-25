@@ -9,15 +9,34 @@ scrape_filenames <- function(url, pattern = ".*") {
     purrr::keep(stringr::str_detect, pattern = pattern)
 }
 
-# retries the download in case of error for specified number of times
-download_retry <- function(..., times = 2) {
-  while (times >=0) {
-    ret <- try(utils::download.file(...), silent = TRUE)
-    if(!methods::is(ret, 'try-error')) break
-    times <- times - 1
-    if (times >=0) message("error in download, retrying...")
+# preset arguments for downloding multiple files with "libcurl"
+# split url/file lists to downlod in groups
+download_files <- function(urls, destfiles, group_size = 5, method = "libcurl", quiet = TRUE, ...) {
+
+  # preset options for download.file
+  download <- purrr::partial(utils::download.file, method = "libcurl", quiet = TRUE, ...)
+
+  if (length(urls) <= group_size) {
+    download(urls, destfiles)
+  } else {
+    # break list of files into groups when geting many files
+    groups <- ceiling(seq_along(urls) / group_size)
+
+    urls <- split(urls, groups)
+    destfiles <- split(destfiles, groups)
+
+    purrr::walk2(urls, destfiles, ~{
+      download(.x, .y)
+      # add delays to be kind to servers
+      Sys.sleep(sample(c(1, 2, 5), 1))
+    })
   }
-  if(methods::is(ret, 'try-error')) stop(ret[[1]], call. = FALSE)
+}
+
+
+# wrap unzip in walk to allow for unzipping multiple files, and preset arguments
+unzip_files <- function(zip_files, exdir, files = NULL, junkpaths = TRUE, ...) {
+  purrr::walk(zip_files, utils::unzip, exdir = exdir, junkpaths = TRUE, ...)
 }
 
 # Downloads Seq/Table/Var Info
@@ -25,9 +44,9 @@ download_docs <- function(doc_dir, endyear, span) {
 
   if (!file.exists(doc_dir)) {
 
-    base_url <- glue("https://www2.census.gov/programs-surveys/acs/summary_file/{endyear}")
-
     dir.create(doc_dir, showWarnings = FALSE)
+
+    base_url <- glue("https://www2.census.gov/programs-surveys/acs/summary_file/{endyear}")
 
     docs_base_url <- glue("{base_url}/documentation")
 
@@ -45,7 +64,7 @@ download_docs <- function(doc_dir, endyear, span) {
       # standardize when saving local copy for easier lookup later
       docs_file <- glue("{doc_dir}/seq_table_lookup.xls")
 
-      download_retry(docs_file_url, docs_file, mode = "wb", quiet = TRUE)
+      download_files(docs_file_url, docs_file, mode = "wb")
 
     } else if (endyear == 2005) {
 
@@ -55,7 +74,7 @@ download_docs <- function(doc_dir, endyear, span) {
       seq_url <- glue("{docs_base_url}/{seq_filename}")
       seq_file <- glue("{doc_dir}/{seq_filename}")
 
-      download_retry(seq_url, seq_file, mode = "wb", quiet = TRUE)
+      download_files(seq_url, seq_file, mode = "wb")
 
 
       # also need table shells to build for table/vars
@@ -65,8 +84,7 @@ download_docs <- function(doc_dir, endyear, span) {
       shell_urls <- glue("{shell_base_url}/{shell_filenames}")
       shell_files <- glue("{doc_dir}/{shell_filenames}")
 
-      purrr::walk2(shell_urls, shell_files, download_retry, mode = "wb", quiet = TRUE)
-
+      download_files(shell_urls, shell_files)
     }
 
     # for recent years get geography columns info
@@ -82,7 +100,7 @@ download_docs <- function(doc_dir, endyear, span) {
       templates_url <- glue("{base_url}/data/{templates_filename}")
       templates_file <- glue("{doc_dir}/{templates_filename}")
 
-      download_retry(templates_url, templates_file, quiet = TRUE)
+      download_files(templates_url, templates_file)
 
       # unzip just the geography file
       zipped_geo_file <- utils::unzip(templates_file, list = TRUE) %>%
@@ -102,9 +120,9 @@ download_data <- function(geo_dir, endyear, span, geo_name) {
 
   if (!file.exists(geo_dir)) {
 
-    base_url <- glue("https://www2.census.gov/programs-surveys/acs/summary_file/{endyear}")
-
     dir.create(geo_dir, showWarnings = FALSE)
+
+    base_url <- glue("https://www2.census.gov/programs-surveys/acs/summary_file/{endyear}")
 
     if (endyear >= 2009) {
 
@@ -114,8 +132,8 @@ download_data <- function(geo_dir, endyear, span, geo_name) {
       data_url <- glue("{base_url}/data/{span}_year_by_state/{data_filename}")
       data_file <- glue("{geo_dir}/{data_filename}")
 
-      download_retry(data_url, data_file, quiet = TRUE)
-      utils::unzip(data_file, exdir = geo_dir, junkpaths = TRUE)
+      download_files(data_url, data_file)
+      unzip_files(data_file, exdir = geo_dir)
 
 
     } else if (endyear <= 2008) {
@@ -138,8 +156,9 @@ download_data <- function(geo_dir, endyear, span, geo_name) {
       data_urls <- glue('{data_base_url}/{data_filenames}')
       data_files <- glue("{geo_dir}/{data_filenames}")
 
-      purrr::walk2(data_urls, data_files, download_retry, quiet = TRUE)
-      purrr::walk(data_files, utils::unzip, exdir = geo_dir, junkpaths = TRUE)
+      download_files(data_urls, data_files)
+      # TODO:filter to only zipfiles
+      unzip_files(data_files, exdir = geo_dir)
 
     }
   }
