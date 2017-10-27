@@ -28,7 +28,7 @@ download_acs <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
     overwrite = overwrite
   )
 
-  geo_name <- swap_geo_name(geo)
+  geo_name <- swap_geo_id(geo, "name")
 
 
   raw_dir <- glue("{acs_dir}/Raw/{endyear}_{span}")

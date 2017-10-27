@@ -5,7 +5,7 @@ scrape_filenames <- function(url, pattern = ".*") {
   xml2::read_html(url) %>%
     rvest::html_nodes("table td a") %>%
     rvest::html_attr("href") %>%
-    .[-1] %>% # first always "parent dir"
+    .[-1] %>% # drop first element, always "parent dir"
     purrr::keep(stringr::str_detect, pattern = pattern)
 }
 
@@ -54,11 +54,11 @@ download_docs <- function(doc_dir, endyear, span) {
     if (endyear >= 2006) {
 
       docs_file_url <- dplyr::case_when(
-        endyear == 2006        ~ as.character(glue("{docs_base_url}/merge_5_6_final.xls")),
-        endyear == 2007        ~ as.character(glue("{docs_base_url}/{span}_year/merge_5_6_final.xls")),
-        endyear %in% 2008:2009 ~ as.character(glue("{docs_base_url}/{span}_year/user_tools/merge_5_6.xls")),
-        endyear %in% 2010:2012 ~ as.character(glue("{docs_base_url}/{span}_year/user_tools/Sequence_Number_and_Table_Number_Lookup.xls")),
-        endyear >=2013         ~ as.character(glue("{docs_base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.xls"))
+        endyear == 2006        ~ glue_chr("{docs_base_url}/merge_5_6_final.xls"),
+        endyear == 2007        ~ glue_chr("{docs_base_url}/{span}_year/merge_5_6_final.xls"),
+        endyear %in% 2008:2009 ~ glue_chr("{docs_base_url}/{span}_year/user_tools/merge_5_6.xls"),
+        endyear %in% 2010:2012 ~ glue_chr("{docs_base_url}/{span}_year/user_tools/Sequence_Number_and_Table_Number_Lookup.xls"),
+        endyear >=2013         ~ glue_chr("{docs_base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.xls")
       )
 
       # standardize when saving local copy for easier lookup later
@@ -141,14 +141,14 @@ download_data <- function(geo_dir, endyear, span, geo_name) {
       # get data files (including geographies)
 
       data_base_url <- dplyr::case_when(
-        endyear == 2005 & geo_name == "UnitedStates" ~ as.character(glue("{base_url}/data/0UnitedStates")),
-        endyear %in% 2005:2006                       ~ as.character(glue("{base_url}/data/{geo_name}")),
-        endyear %in% 2007:2008                       ~ as.character(glue("{base_url}/data/{span}_year/{geo_name}"))
+        endyear == 2005 & geo_name == "UnitedStates" ~ glue_chr("{base_url}/data/0UnitedStates"),
+        endyear %in% 2005:2006                       ~ glue_chr("{base_url}/data/{geo_name}"),
+        endyear %in% 2007:2008                       ~ glue_chr("{base_url}/data/{span}_year/{geo_name}")
       )
 
       data_file_pattern <- dplyr::case_when(
         endyear %in% 2005      ~ "\\.2005-1yr",
-        endyear %in% 2006:2008 ~ as.character(glue("{endyear}{span}"))
+        endyear %in% 2006:2008 ~ glue_chr("{endyear}{span}")
       )
 
       data_filenames <- scrape_filenames(data_base_url, data_file_pattern)
