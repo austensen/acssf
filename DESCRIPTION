@@ -17,7 +17,8 @@ Imports:
     stringr,
     glue,
     xml2,
-    methods
+    methods,
+    tidyr
 RoxygenNote: 6.0.1
 URL: https://github.com/austensen/acssf
 BugReports: https://github.com/austensen/acssf/issues
