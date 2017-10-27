@@ -6,3 +6,4 @@
 ^codecov\.yml$
 ^ignored$
 ^README\.RMD$
+^\.DS_Store$

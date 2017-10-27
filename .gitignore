@@ -2,3 +2,4 @@
 .Rhistory
 .RData
 ignored/
+.DS_Store
