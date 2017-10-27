@@ -1,8 +1,12 @@
+## swap_geo_id was addapted from tidycensus "validate_state"
+## https://github.com/walkerke/tidycensus/blob/12b18d230ba1768f92056919fbab341f3ff63ceb/R/utils.R
 
-# from fips/abbrev to geo name for URLs
-# addapted from tidycensus "validate_state"
-# https://github.com/walkerke/tidycensus/blob/12b18d230ba1768f92056919fbab341f3ff63ceb/R/utils.R
-swap_geo_name <- function(geo) {
+#' Return desired geography variable from FIPS or abbreviation
+#'
+#' @param key character or numberic, state FIPS code or state (or US) abreviation
+#'
+#' @keywords internal
+swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
 
   geo <- geo %>% stringr::str_trim() %>% stringr::str_to_lower()
 
@@ -18,7 +22,7 @@ swap_geo_name <- function(geo) {
 
       ret <- fips_abb_name_table %>%
         dplyr::filter(fips == geo) %>%
-        dplyr::pull(name)
+        dplyr::pull(id)
 
       return(ret)
     }
@@ -28,7 +32,7 @@ swap_geo_name <- function(geo) {
 
       ret <- fips_abb_name_table %>%
         dplyr::filter(abb == geo) %>%
-        dplyr::pull(name)
+        dplyr::pull(id)
 
       return(ret)
     }

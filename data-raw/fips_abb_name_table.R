@@ -1,6 +1,6 @@
 fips_abb_name_table <- tibble::tribble(
    ~abb, ~fips,                 ~name,
-   "us",  "00",        "UnitedsStates",
+   "us",  "00",        "UnitedStates",
    "ak",  "02",              "Alaska",
    "al",  "01",             "Alabama",
    "ar",  "05",            "Arkansas",
