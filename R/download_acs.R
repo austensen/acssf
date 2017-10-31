@@ -15,7 +15,7 @@
 #'
 #' @export
 
-download_acs <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
+acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
 
   # TODO: test for 3- & 5-year, add support for taking vector of geos
   # TODO: when ready, consider switching using https://github.com/ropensci/ftp
@@ -49,14 +49,10 @@ download_acs <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
     span = span
   )
 
-
   download_data(
     geo_dir = glue("{raw_dir}/{geo_name}"),
     endyear = endyear,
     span = span,
     geo_name = geo_name
   )
-
-
-
 }
