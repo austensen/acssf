@@ -7,7 +7,9 @@
 swap_geo_id(geo, id = c("name", "abb", "fips"))
 }
 \arguments{
-\item{key}{character or numberic, state FIPS code or state (or US) abreviation}
+\item{geo}{character or numberic, state FIPS code or state (or US) abreviation}
+
+\item{id}{character, type of geogrphy ID to return ("name", "abb", or "fips")}
 }
 \description{
 Return desired geography variable from FIPS or abbreviation
