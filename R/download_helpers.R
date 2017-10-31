@@ -9,28 +9,10 @@ scrape_filenames <- function(url, pattern = ".*") {
     purrr::keep(stringr::str_detect, pattern = pattern)
 }
 
-# preset arguments for downloding multiple files with "libcurl"
-# split url/file lists to downlod in groups
-download_files <- function(urls, destfiles, group_size = 5, method = "libcurl", quiet = TRUE, ...) {
+download_files <- function(urls, destfiles, ...) {
 
-  # preset options for download.file
-  download <- purrr::partial(utils::download.file, method = "libcurl", quiet = TRUE, ...)
+  purrr::walk2(urls, destfiles, curl::curl_download, ...)
 
-  if (length(urls) <= group_size) {
-    download(urls, destfiles)
-  } else {
-    # break list of files into groups when geting many files
-    groups <- ceiling(seq_along(urls) / group_size)
-
-    urls <- split(urls, groups)
-    destfiles <- split(destfiles, groups)
-
-    purrr::walk2(urls, destfiles, ~{
-      download(.x, .y)
-      # add delays to be kind to servers
-      Sys.sleep(sample(c(1, 2, 5), 1))
-    })
-  }
 }
 
 
@@ -42,6 +24,8 @@ unzip_files <- function(zip_files, exdir, files = NULL, junkpaths = TRUE, ...) {
 # Downloads Seq/Table/Var Info
 download_docs <- function(doc_dir, endyear, span) {
 
+  # Only one set of docs per year/span,
+  # so If there already is a docs folder skip downloads
   if (!file.exists(doc_dir)) {
 
     dir.create(doc_dir, showWarnings = FALSE)
