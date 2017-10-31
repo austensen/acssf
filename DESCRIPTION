@@ -18,7 +18,8 @@ Imports:
     glue,
     xml2,
     methods,
-    tidyr
+    tidyr,
+    curl
 RoxygenNote: 6.0.1
 URL: https://github.com/austensen/acssf
 BugReports: https://github.com/austensen/acssf/issues
