@@ -3,7 +3,8 @@
 
 #' Return desired geography variable from FIPS or abbreviation
 #'
-#' @param key character or numberic, state FIPS code or state (or US) abreviation
+#' @param geo character or numberic, state FIPS code or state (or US) abreviation
+#' @param id character, type of geogrphy ID to return ("name", "abb", or "fips")
 #'
 #' @keywords internal
 swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
@@ -28,7 +29,7 @@ swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
     }
   } else if (stringr::str_detect(geo, "^[[:alpha:]]+")) {
 
-    if (nchar(geo) == 2 & geo %in% fips_abb_name_table[["abb"]]) {
+    if (nchar(geo) == 2 && geo %in% fips_abb_name_table[["abb"]]) {
 
       ret <- fips_abb_name_table %>%
         dplyr::filter(abb == geo) %>%
@@ -41,7 +42,7 @@ swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
 }
 
 
-validate_args <- function(endyear, span, overwrite) {
+validate_args <- function(endyear, span, overwrite = NULL) {
 
   endyear <- as.integer(endyear)
   if (is.na(endyear)) {
@@ -57,15 +58,15 @@ validate_args <- function(endyear, span, overwrite) {
     stop_glue("ACS is only available from 2005 onwards.")
   }
 
-  if (endyear %in% 2005:2006 & span != 1L) {
+  if (endyear %in% 2005:2006 && span != 1L) {
     stop_glue("For {endyear} only 1-year data is available.")
   } else if (endyear %in% 2007:2008 & span == 5L) {
     stop_glue("For {endyear} only 1- and 3-year data is available.")
-  } else if (endyear >= 2014L & span == 3L) {
+  } else if (endyear >= 2014L && span == 3L) {
     stop_glue("From 2014 onward 3-year data is no longer available.")
   }
 
-  if (!is.logical(overwrite)) {
+  if (!is.null(overwrite) && !is.logical(overwrite)) {
     stop_glue("`overwrite` must be logical.")
   }
 
