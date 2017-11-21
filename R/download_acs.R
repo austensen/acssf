@@ -33,11 +33,16 @@ acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
 
   raw_dir <- glue("{acs_dir}/Raw/{endyear}_{span}")
 
-  if (overwrite == TRUE) {
-    unlink(raw_dir, recursive = TRUE)
+  dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
+
+  if (overwrite) {
+    unlink(glue("{raw_dir}/_docs"), recursive = TRUE)
+    unlink(glue("{raw_dir}/{geo_name}"), recursive = TRUE)
+  } else if (file.exists(glue("{raw_dir}/{geo_name}"))) {
+    warn_glue("{endyear} {span}-year data for {geo_name} already exists.")
+    return(invisible(NULL))
   }
 
-  dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
 
   # some downloads take a long time, temporarily change timeout (10min)
   op <- options(timeout = 600L)
@@ -50,7 +55,7 @@ acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
   )
 
   download_data(
-    geo_dir = glue("{raw_dir}/{geo_name}"),
+    data_dir = glue("{raw_dir}/{geo_name}"),
     endyear = endyear,
     span = span,
     geo_name = geo_name
