@@ -15,9 +15,10 @@ Imports:
     dplyr,
     purrr,
     stringr,
+    readr,
+    readxl,
     glue,
     xml2,
-    methods,
     tidyr,
     curl
 RoxygenNote: 6.0.1
