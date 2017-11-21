@@ -4,7 +4,7 @@
 \alias{acs_make_table}
 \title{Create ACS Table in Database}
 \usage{
-acs_make_table(acs_dir, endyear, span, geo, sumlevels, table_name, conn)
+acs_make_table(acs_dir, endyear, span, geo, sum_level, vars_table)
 }
 \arguments{
 \item{acs_dir}{The root directory in which all the ACS SF data will be saved.}
