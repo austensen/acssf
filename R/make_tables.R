@@ -17,8 +17,9 @@
 #'
 #' @export
 #'
-acs_make_table <- function(acs_dir, endyear, span, geo, sumlevels, table_name, conn) {
+acs_make_table <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
 
+  # TODO: check that raw data folder exists
 
   validate_args(
     endyear = endyear,
@@ -29,6 +30,10 @@ acs_make_table <- function(acs_dir, endyear, span, geo, sumlevels, table_name, c
   # TODO: validate requested sumlevels. Are they available for requested geo type
   # (state or US) and span (1 or 5 year). Add to validators.R file.
 
+  # Might also make a function that returns a table to help people learn the
+  # summary level codes. eg. a table with cols: endyear, span, sumlevel code,
+  # sumlevel name
+
   # https://factfinder.census.gov/help/en/summary_level_code_list.htm
 
   # ACS 1, state
@@ -37,27 +42,67 @@ acs_make_table <- function(acs_dir, endyear, span, geo, sumlevels, table_name, c
   # state_5_sumlevel
   # us_5_sumlevels
 
+  sum_level_name <- switch(
+    sum_level,
+    "010" = "us",
+    "310" = "cbsa",
+    "160" = "place",
+    "795" = "puma",
+    "040" = "state",
+    "050" = "county",
+    "140" = "tract",
+    "150" = "blockgroup"
+  )
+
 
   geo_abb <- swap_geo_id(geo, "abb")
+  geo_name <- swap_geo_id(geo, "name")
 
 
-  # TODO: check if data is there for the requested params
+
+  trct_blkgrp <- sum_level_name %in% c("tract", "blockgroup")
+
 
   raw_dir <- glue("{acs_dir}/Raw/{endyear}_{span}")
 
-  # get table of geoid nad logrecno to filter other tables
+  docs_dir <- glue("{raw_dir}/_docs")
+
+  data_dir <- dplyr::case_when(
+    span == 1L                 ~ glue_chr("{raw_dir}/{geo_name}"),
+    span == 5L && trct_blkgrp  ~ glue_chr("{raw_dir}/{geo_name}/tract_blockgroup"),
+    span == 5L && !trct_blkgrp ~ glue_chr("{raw_dir}/{geo_name}/non_tract_blockgroup")
+  )
+
+  clean_dir <- glue("{acs_dir}/Clean/{endyear}_{span}")
+
+  dir.create(clean_dir, recursive = TRUE, showWarnings = FALSE)
+
+
+  # TODO: check if data has already been downloaded for the requested params
+
+
+  # get table of geoid and logrecno to filter other tables
   geos_table_slim <- get_geos_table(
-    raw_dir = raw_dir,
+    data_dir = data_dir,
+    docs_dir = docs_dir,
     endyear = endyear,
     span = span,
     geo_abb = geo_abb,
-    sumlevels = sumlevels
+    sum_level = sum_level
   )
 
 
   # create a named list of table_vars (names are seq numbers)
-  seq_col_lookup <- get_seq_col_lookup(raw_dir, endyear)
+  seq_col_lookup <- get_seq_col_lookup(docs_dir, endyear)
 
+  # TODO: update when data fixed - problem with 2006 files from ftp
+  if (endyear == 2006L) {
+    bad_seqs <- glue_chr("0{138:144}000")
+  } else bad_seqs <- {
+    character()
+  }
+
+  seq_col_lookup <- seq_col_lookup[!names(seq_col_lookup) %in% bad_seqs]
 
   # Iterate over the seq numbers and for each do the following:
   # import that seq number's value files for estimates and margins,
@@ -65,115 +110,69 @@ acs_make_table <- function(acs_dir, endyear, span, geo, sumlevels, table_name, c
   # reshape the files long and combine estiamtes and margins
   # push the final table (for that seq) to the database
 
+  # TODO: see if possible to tweak progress bar to include time spent on
+  # reshaping adn writing csv after thir purrr step
+
   pb <- dplyr::progress_estimated(length(names(seq_col_lookup)))
 
-  purrr::walk(
+
+  values_long <- purrr::map_dfr(
     .x = names(seq_col_lookup),
     .f = import_values,
     seq_col_lookup = seq_col_lookup,
     geos_table = geos_table_slim,
-    raw_dir = raw_dir,
+    vars_table = vars_table,
+    data_dir = data_dir,
     endyear = endyear,
     span = span,
     geo_abb = geo_abb,
-    conn = conn,
-    table_name = table_name,
     .pb = pb
   )
 
-}
 
-#' Create Index on ACS Table in Database
-#'
-#' This function creates a unique index (if it does not exist) on a ACS table
-#' in a database created by `acssf::acs_make_table()`.
-#'
-#' @param conn \[`DBIConnection`]:A DBI connection object obtained from
-#'   `DBI::dbConnect()`.
-#' @param table_name \[`character`]:The name of the table in the database that
-#'   has been created by `acssf::acs_make_table()`.
-#'
-#' @export
-#'
-acs_create_indexes <- function(conn, table_name) {
+  # possible that there are no rows returned (eg. place in WY for 1yr)
+  if (nrow(values_long) == 0) return(invisible(NULL))
 
-  create_index(conn, table_name, c("endyear", "span", "geoid", "table_var"), "key")
-  create_index(conn, table_name, c("geoid", "table_var"), "idx")
-  create_index(conn, table_name, "endyear", "idx")
-  create_index(conn, table_name, "span", "idx")
-  create_index(conn, table_name, "geoid", "idx")
-  create_index(conn, table_name, "table_var", "idx")
+  if (endyear == 2010L) {
+    # There are some tables that appear in multiple Seq files for some reason
+    # eg. B05002 is in 23 and 171
+    values_long <- dplyr::distinct(values_long)
+  }
 
-}
 
-create_index <- function(conn, table, vars, suffix = c("pkey", "key", "idx")) {
+  values_wide <- values_long %>%
+    tidyr::gather("type", "value", estimate, margin) %>%
+    dplyr::mutate( # eg. b01001_e001
+      table_var = stringr::str_replace(
+        table_var,
+        "_",
+        stringr::str_c("_", stringr::str_sub(type, 1, 1))
+      )
+    ) %>%
+    dplyr::select(-type) %>%
+    tidyr::spread(table_var, value) %>%
+    dplyr::mutate(
+      sum_level = stringr::str_extract(geoid, "^\\d{3}"),
+      geo_type = sum_level_name,
+      geoid = stringr::str_extract(geoid, "\\d+$")
+    ) %>%
+    dplyr::select(endyear, span, geoid, sum_level, geo_type, dplyr::everything())
 
-  uni <- dplyr::if_else(suffix %in% c("pkey", "key"), "UNIQUE", "")
 
-  DBI::dbSendStatement(conn, glue('
-    CREATE {uni} INDEX IF NOT EXISTS
-    {table}_{glue::collapse(vars, sep = "_")}_{suffix}
-    ON {table} ({glue::collapse(vars, sep = ", ")})
-    ')
+  readr::write_csv(
+    values_wide,
+    glue("{clean_dir}/{geo_abb}_{sum_level_name}_{endyear}_{span}.csv"),
+    na = ""
   )
+
+
 
 }
 
 
 # Geos --------------------------------------------------------------------
 
-# TODO: decide if it's worth creating a geos table in the database. Ideally it
-# makes sense, but will it ever really be used if it takes so much storrage to
-# keep many years and geographies on the database?
-
-# for now just creating the slim version needed for processing the vars and
-# values, and not returning the full version that would be added to the databse
-
-get_geos_table <- function(raw_dir, endyear, span, geo_abb, sumlevels) {
-
-  if (endyear >= 2009) {
-
-    geo_name <- swap_geo_id(geo_abb, "name")
-
-    geo_col_names <- glue("{raw_dir}/_docs/{endyear}_SFGeoFileTemplate.xls") %>%
-      readxl::read_excel(n_max = 0) %>%
-      names() %>%
-      stringr::str_to_lower()
-
-    geos_table_raw <- glue("{raw_dir}/{geo_name}/g{endyear}{span}{geo_abb}.csv") %>%
-      readr::read_csv(
-        col_names = geo_col_names,
-        col_types = readr::cols(.default = "c")
-      )
-
-  } else {
-    # TODO: add the fwf_cols taken from sas programs (maybe process in /data-raw ?)
-    stop_glue("2005 to 2008 not yet available")
-  }
-
-
-  # TODO: decide which columns to keep, for now keep only what we need now
-  keep_geo_cols <- c("geoid", "name", "sumlevel", "component", "logrecno", "us", "stusab")
-
-
-  geos_clean <- geos_table_raw %>%
-    dplyr::filter(sumlevel %in% sumlevels) %>%
-    dplyr::mutate(
-      endyear = endyear,
-      span = span
-    ) %>%
-    dplyr::select(endyear, span, keep_geo_cols)
-
-
-  # For merging geoid onto values table
-  geos_table_slim <- geos_clean %>% dplyr::select(logrecno, geoid)
-
-  # For database
-  geos_table <- geos_clean %>% dplyr::select(-logrecno)
-
-  return(geos_table_slim)
-}
-
+# see make_table_helpers.R
 
 
 # Vars --------------------------------------------------------------------
@@ -184,13 +183,13 @@ get_geos_table <- function(raw_dir, endyear, span, geo_abb, sumlevels) {
 # universe, definition, and row descriptions. Is this the best way to look up
 # variables?
 
-get_seq_col_lookup <- function(raw_dir, endyear) {
+get_seq_col_lookup <- function(docs_dir, endyear) {
 
   if (endyear == 2005) {
     # TODO: add code to parse multiple seq tables for seq/vars
     stop_glue("Need to add 2005 functionality")
   } else {
-    vars_raw <- glue("{raw_dir}/_docs/seq_table_lookup.xls") %>%
+    vars_raw <- glue("{docs_dir}/seq_table_lookup.xls") %>%
       readxl::read_excel(col_types = "text") %>%
       # column name formats differ, but order is consistent
       dplyr::select(
@@ -201,11 +200,10 @@ get_seq_col_lookup <- function(raw_dir, endyear) {
       # remove extra rows (table fillers) to avoid duplicate table_vars
       dplyr::filter(
         !is.na(line_num),
+        line_num != "0",
         !stringr::str_detect(line_num, "\\.")
       ) %>%
       dplyr::transmute(
-        # endyear = endyear,
-        # span = span,
         table = stringr::str_to_lower(table),
         var = stringr::str_pad(line_num, 3, "left", "0"),
         table_var = stringr::str_c(table, "_", var),
@@ -223,17 +221,17 @@ get_seq_col_lookup <- function(raw_dir, endyear) {
 import_values <- function(seq,
                           seq_col_lookup,
                           geos_table,
-                          raw_dir,
+                          vars_table,
+                          data_dir,
                           endyear,
                           span,
                           geo_abb,
-                          conn,
-                          table_name,
                           .pb = NULL) {
 
-  if ((!is.null(.pb)) && inherits(.pb, "Progress") && (.pb$i < .pb$n)) .pb$tick()$print()
+  if ((!is.null(.pb)) && inherits(.pb, "Progress") && (.pb$i < .pb$n)) {
+    .pb$tick()$print()
+  }
 
-  geo_name <- swap_geo_id(geo_abb, "name")
 
   # these are always the first columns in the values files
   first_cols <- c("fileid", "filetype", "stusab", "chariter", "sequence", "logrecno")
@@ -252,7 +250,7 @@ import_values <- function(seq,
     logrecno = "c"
   )
 
-  estimates <- glue("{raw_dir}/{geo_name}/e{endyear}{span}{geo_abb}{seq}.txt") %>%
+  estimates <- glue("{data_dir}/e{endyear}{span}{geo_abb}{seq}.txt") %>%
     readr::read_csv(
       col_names = c(first_cols, seq_cols),
       col_types = value_cols,
@@ -264,7 +262,7 @@ import_values <- function(seq,
     tidyr::gather("table_var", "estimate", -geoid)
 
 
-  margins <- glue("{raw_dir}/{geo_name}/m{endyear}{span}{geo_abb}{seq}.txt") %>%
+  margins <- glue("{data_dir}/m{endyear}{span}{geo_abb}{seq}.txt") %>%
     readr::read_csv(
       col_names = c(first_cols, seq_cols),
       col_types = value_cols,
@@ -276,24 +274,16 @@ import_values <- function(seq,
     tidyr::gather("table_var", "margin", -geoid)
 
 
-  # with estaimates and margins sorted indentically can bind columns
-  values_table <- estimates %>%
+  # with estimates and margins sorted indentically can bind columns, then join
+  # with vars_table to keep only the desired table_vars
+  values_long <- estimates %>%
     dplyr::select(-geoid, -table_var) %>%
     dplyr::bind_cols(margins) %>%
+    dplyr::semi_join(vars_table, by = "table_var") %>%
     dplyr::mutate(
       endyear = endyear,
       span = span
-    ) %>%
-    dplyr::select(endyear, span, geoid, table_var, estimate, margin)
-
-
-  DBI::dbWriteTable(
-    conn,
-    name = table_name,
-    value = values_table,
-    append = TRUE,
-    row.names = FALSE
-  )
+    )
 
 }
 
