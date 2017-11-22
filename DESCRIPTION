@@ -11,6 +11,7 @@ Suggests:
     testthat,
     covr
 Imports:
+    rlang,
     rvest,
     dplyr,
     purrr,
