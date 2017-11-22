@@ -125,7 +125,10 @@ download_data <- function(data_dir, endyear, span, geo_name) {
 
       if (span == 1L) {
 
-        data_filenames <- glue("{geo_name}_All_Geographies.zip")
+        data_filenames <- dplyr::case_when(
+          endyear == 2009 ~ glue_chr("{geo_name}.zip"),
+          endyear > 2009  ~ glue_chr("{geo_name}_All_Geographies.zip")
+        )
 
         data_files <- glue("{data_dir}/{data_filenames}")
 

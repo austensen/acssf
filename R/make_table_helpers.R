@@ -1,11 +1,76 @@
 
 
 
+
+# TODO: decide if its worth having a variable variable lookup table at all. If
+# so what should it include and how should it be laid out. Could have one with
+# universe, definition, and row descriptions. Is this the best way to look up
+# variables?
+
+
+# Vars --------------------------------------------------------------------
+
+
+get_seq_col_lookup <- function(docs_dir, endyear) {
+
+  if (file.exists(glue("{docs_dir}/seq_col_lookup.rds"))) {
+
+    readr::read_rds(glue("{docs_dir}/seq_col_lookup.rds"))
+
+  } else {
+
+    make_seq_col_lookup(docs_dir, endyear)
+  }
+}
+
+
+make_seq_col_lookup <- function(docs_dir, endyear) {
+
+  if (endyear == 2005) {
+    # TODO: add code to parse multiple seq tables for seq/vars
+    stop_glue("Need to add 2005 functionality")
+
+  } else {
+
+    vars_raw <- glue("{docs_dir}/seq_table_lookup.xls") %>%
+      readxl::read_excel(col_types = "text") %>%
+      # column name formats differ, but order is consistent
+      dplyr::select(
+        table = 2,
+        seq = 3,
+        line_num = 4
+      ) %>%
+      # remove extra rows (table fillers) to avoid duplicate table_vars
+      dplyr::filter(
+        !is.na(line_num),
+        line_num != "0",
+        !stringr::str_detect(line_num, "\\.")
+      ) %>%
+      dplyr::transmute(
+        table = stringr::str_to_lower(table),
+        var = stringr::str_pad(line_num, 3, "left", "0"),
+        table_var = stringr::str_c(table, "_", var),
+        seq = stringr::str_c(stringr::str_pad(seq, 4, "left", "0"), "000")
+      )
+
+    # create a named list of table_vars (names are seq numbers)
+    seq_col_lookup <- split(vars_raw[["table_var"]], vars_raw[["seq"]])
+  }
+
+
+  readr::write_rds(seq_col_lookup, glue("{docs_dir}/seq_col_lookup.rds"))
+
+}
+
+
+
+# Geos --------------------------------------------------------------------
+
 get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, sum_level) {
 
-  if (file.exists(glue("{docs_dir}/geos_table.rds"))) {
+  if (file.exists(glue("{data_dir}/geos_table.rds"))) {
 
-    geos_table <- readr::read_rds(glue("{docs_dir}/geos_table.rds"))
+    geos_table <- readr::read_rds(glue("{data_dir}/geos_table.rds"))
 
   } else {
 
@@ -23,7 +88,7 @@ get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, sum_level
 make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
 
 
-  if (endyear >= 2009) {
+  if (endyear >= 2010) {
 
     geo_col_names <- glue("{docs_dir}/{endyear}_SFGeoFileTemplate.xls") %>%
       readxl::read_excel(n_max = 0) %>%
@@ -46,6 +111,10 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
       )
     }
 
+  } else if (endyear == 2009L) {
+
+    # TODO: template file missing fro 2009, try minigeo.xls
+
   } else {
 
     # no template files in these years
@@ -61,7 +130,7 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
 
   geos_table_raw %>%
     dplyr::select(c("logrecno", "geoid", "sumlevel")) %>%
-    readr::write_rds(glue("{docs_dir}/geos_table.rds"))
+    readr::write_rds(glue("{data_dir}/geos_table.rds"))
 }
 
 

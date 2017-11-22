@@ -1,19 +1,24 @@
-#' Create ACS Table in Database
+#' Create csv file/dataframe of ACS variables for a given sample and geography
 #'
-#' This function parses the data downloded by `acssf::download_acs()` and either creates
-#' or appends to a table in a database with American Community Survey (ACS)
-#' Summary File (SF) data.
+#' This function parses the data downloded by [download_acs()] and creates a csv
+#' file for the selected parameters.
 #'
-#' @param acs_dir The root directory in which all the ACS SF data will be saved.
-#' @param endyear The endyear of the ACS sample. 2005 through 2016 are
-#'   available.
-#' @param span The span of years for ACS estimates. ACS contains 1-, 3-, and
-#'   5-year surveys.
-#' @param geo The 2-letter abbreviation for the state for which data will be
-#'   downloaded. For geogrpahies that do not nest within states, use `"us"`.
-#' @param sumlevels [`character`]: A character vector of the Census Bureau summary levels to include in the table. (eg. "010" = United States) For full list see https://factfinder.census.gov/help/en/summary_level_code_list.htm
-#' @param table_name \[`character`]:The name of the table in the database that should be create or appended to.
-#' @param conn \[`DBIConnection`]:A DBI connection object obtained from `DBI::dbConnect()`.
+#' @param acs_dir \[`character(1)`]: The root directory in which all the ACS
+#'   data has been downloaded with [acs_download()].
+#' @param endyear \[integer(1)]: The endyear of the desired ACS sample. For
+#'   example, use 2010 for the 2010 1-year ACS or the 2006-2010 5-yer ACS.
+#' @param span \[integer(1)]: The span of years for ACS estimates. ACS contains
+#'   1-, 3-, and 5-year surveys.
+#' @param geo \[`charater(1)`]: The 2-letter state abbreviation or 2-digit FIPS
+#'   code for the state for which data will be downloaded. For geogrpahies that
+#'   do not nest within states, use `"us"`.
+#' @param sum_level \[`character(1)`]: The Census Bureau code for the summary
+#'   level to include in the table. (eg. "010" = United States) For full list
+#'   see <https://factfinder.census.gov/help/en/summary_level_code_list.htm>.
+#' @param vars_table \[`data.frame`]: A dataframe with a single column
+#'   containing the desired ACS variable codes to be included in the output
+#'   table. The ACS codes must be stored as a character column using the format
+#'   `"b25003_001"`.
 #'
 #' @export
 #'
@@ -95,14 +100,6 @@ acs_make_table <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
   # create a named list of table_vars (names are seq numbers)
   seq_col_lookup <- get_seq_col_lookup(docs_dir, endyear)
 
-  # TODO: update when data fixed - problem with 2006 files from ftp
-  if (endyear == 2006L) {
-    bad_seqs <- glue_chr("0{138:144}000")
-  } else bad_seqs <- {
-    character()
-  }
-
-  seq_col_lookup <- seq_col_lookup[!names(seq_col_lookup) %in% bad_seqs]
 
   # Iterate over the seq numbers and for each do the following:
   # import that seq number's value files for estimates and margins,
@@ -154,9 +151,13 @@ acs_make_table <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
     dplyr::mutate(
       sum_level = stringr::str_extract(geoid, "^\\d{3}"),
       geo_type = sum_level_name,
+      geoid_full = geoid,
       geoid = stringr::str_extract(geoid, "\\d+$")
     ) %>%
-    dplyr::select(endyear, span, geoid, sum_level, geo_type, dplyr::everything())
+    dplyr::select(
+      endyear, span, geoid_full, geoid, sum_level, geo_type,
+      dplyr::everything()
+    )
 
 
   readr::write_csv(
@@ -165,56 +166,6 @@ acs_make_table <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
     na = ""
   )
 
-
-
-}
-
-
-# Geos --------------------------------------------------------------------
-
-# see make_table_helpers.R
-
-
-# Vars --------------------------------------------------------------------
-
-
-# TODO: decide if its worth having a variable variable lookup table at all. If
-# so what should it include and how should it be laid out. Could have one with
-# universe, definition, and row descriptions. Is this the best way to look up
-# variables?
-
-get_seq_col_lookup <- function(docs_dir, endyear) {
-
-  if (endyear == 2005) {
-    # TODO: add code to parse multiple seq tables for seq/vars
-    stop_glue("Need to add 2005 functionality")
-  } else {
-    vars_raw <- glue("{docs_dir}/seq_table_lookup.xls") %>%
-      readxl::read_excel(col_types = "text") %>%
-      # column name formats differ, but order is consistent
-      dplyr::select(
-        table = 2,
-        seq = 3,
-        line_num = 4
-      ) %>%
-      # remove extra rows (table fillers) to avoid duplicate table_vars
-      dplyr::filter(
-        !is.na(line_num),
-        line_num != "0",
-        !stringr::str_detect(line_num, "\\.")
-      ) %>%
-      dplyr::transmute(
-        table = stringr::str_to_lower(table),
-        var = stringr::str_pad(line_num, 3, "left", "0"),
-        table_var = stringr::str_c(table, "_", var),
-        seq = stringr::str_c(stringr::str_pad(seq, 4, "left", "0"), "000")
-      )
-
-    # create a named list of table_vars (names are seq numbers)
-    get_seq_col_lookup <- split(vars_raw[["table_var"]], vars_raw[["seq"]])
-  }
-
-  return(get_seq_col_lookup)
 }
 
 
@@ -254,9 +205,17 @@ import_values <- function(seq,
     readr::read_csv(
       col_names = c(first_cols, seq_cols),
       col_types = value_cols,
-      na = c("", "."),
+      na = c("", ".", "..0"),
       progress = FALSE
-    ) %>%
+    )
+
+  # Some seq files are empty b/c they are for PR specific tables, so for a state
+  # they are just empty.
+  if (!length(estimates)) {
+    return(tibble::tibble())
+  }
+
+  estimates <- estimates %>%
     dplyr::right_join(geos_table, by = "logrecno") %>%
     dplyr::select(geoid, seq_cols) %>%
     tidyr::gather("table_var", "estimate", -geoid)
