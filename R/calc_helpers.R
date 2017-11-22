@@ -104,14 +104,14 @@ acs_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
 #'   b25070_m002 = c(0.1, NA, 0.4)
 #' )
 #'
-#' drop_acs_estimates(df)
+#' acs_drop_estimates(df)
 #'
-#' drop_acs_margins(df)
+#' acs_drop_margins(df)
 #'
 #' df %>%
-#'   drop_acs_margins() %>%
+#'   acs_drop_margins() %>%
 #'   mutate(foo = acs_sum("b25070_e{1:2*}")) %>%
-#'   drop_acs_estimates()
+#'   acs_drop_estimates()
 #'
 #' @name acs_drop
 #' @export
