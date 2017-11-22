@@ -62,7 +62,7 @@ pad_transformer <- function(code, envir) {
 #' df %>%
 #'   mutate(
 #'     foo = acs_sum("b25070_e{1:2*}"),
-#'     bar = acs_sum("b25070_e{1:2*}", "b25070_e003")
+#'     bar = acs_sum("b25070_e{1:2*}", "b25070_e003"),
 #'     baz = acs_sum("b25070_e002", "b25070_e003")
 #'   )
 #'
@@ -99,7 +99,7 @@ acs_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
 #'   endyear = 2009L,
 #'   span = 1L,
 #'   b25070_e001 = c(1, 2, 3),
-#'   b25070_m001 = c(0.2, 0.5, 0.7)
+#'   b25070_m001 = c(0.2, 0.5, 0.7),
 #'   b25070_e002 = c(3, NA, 1),
 #'   b25070_m002 = c(0.1, NA, 0.4)
 #' )

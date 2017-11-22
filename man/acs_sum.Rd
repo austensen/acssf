@@ -36,7 +36,7 @@ df <- tibble(
 df \%>\%
   mutate(
     foo = acs_sum("b25070_e{1:2*}"),
-    bar = acs_sum("b25070_e{1:2*}", "b25070_e003")
+    bar = acs_sum("b25070_e{1:2*}", "b25070_e003"),
     baz = acs_sum("b25070_e002", "b25070_e003")
   )
 
