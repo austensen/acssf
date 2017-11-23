@@ -94,7 +94,6 @@ acs_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
 #' @examples
 #'
 #' library(dplyr)
-#' library(tibble)
 #'
 #' df <- tibble(
 #'   endyear = 2009L,
