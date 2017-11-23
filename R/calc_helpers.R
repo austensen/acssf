@@ -52,6 +52,7 @@ pad_transformer <- function(code, envir) {
 #' @examples
 #'
 #' library(dplyr)
+#' library(tibble)
 #'
 #' df <- tibble(
 #'   b25070_e001 = c(1, 2, 3),
@@ -94,6 +95,7 @@ acs_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
 #' @examples
 #'
 #' library(dplyr)
+#' library(tibble)
 #'
 #' df <- tibble(
 #'   endyear = 2009L,

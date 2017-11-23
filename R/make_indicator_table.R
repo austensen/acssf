@@ -23,10 +23,12 @@ make_indicator_table <- function(acs_dir, out_dir = NULL, endyear, span, sum_lev
   )
 
   if (is.null(out_dir)) {
-    out_dir <- glue("{acs_dir}/Output/{span}_year/{sum_level_name}")
+    out_dir <- glue("{acs_dir}/Output")
   }
 
   dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+
+  out_file <- glue("{out_dir}/{sum_level_name}_{endyear}_{span}_indicators.csv")
 
   acs_cols <- readr::cols(
     .default = "d",
@@ -48,5 +50,5 @@ make_indicator_table <- function(acs_dir, out_dir = NULL, endyear, span, sum_lev
         readr::read_csv(col_types = acs_cols) %>%
         .f()
     }) %>%
-    readr::write_csv(glue("{out_dir}/{sum_level_name}_{endyear}_indicators.csv"), na = "")
+    readr::write_csv(out_file, na = "")
 }
