@@ -52,7 +52,6 @@ pad_transformer <- function(code, envir) {
 #' @examples
 #'
 #' library(dplyr)
-#' library(tibble)
 #'
 #' df <- tibble(
 #'   b25070_e001 = c(1, 2, 3),

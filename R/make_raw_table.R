@@ -212,7 +212,7 @@ import_values <- function(seq,
   # Some seq files are empty b/c they are for PR specific tables, so for a state
   # they are just empty.
   if (!length(estimates)) {
-    return(tibble::tibble())
+    return(dplyr::tibble())
   }
 
   estimates <- estimates %>%

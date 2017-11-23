@@ -26,7 +26,6 @@ express column inputs as expression strings.
 \examples{
 
 library(dplyr)
-library(tibble)
 
 df <- tibble(
   b25070_e001 = c(1, 2, 3),
