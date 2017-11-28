@@ -68,11 +68,13 @@ make_seq_col_lookup <- function(docs_dir, endyear) {
 
 get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, sum_level) {
 
-  if (file.exists(glue("{data_dir}/geos_table.rds"))) {
+  # TODO: once al bugs fixed, check if file exists before making
 
-    geos_table <- readr::read_rds(glue("{data_dir}/geos_table.rds"))
-
-  } else {
+  # if (file.exists(glue("{data_dir}/geos_table.rds"))) {
+  #
+  #   geos_table <- readr::read_rds(glue("{data_dir}/geos_table.rds"))
+  #
+  # } else {
 
     geos_table <- make_geos_table(
       data_dir = data_dir,
@@ -80,56 +82,86 @@ get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, sum_level
       endyear = endyear,
       span = span,
       geo_abb = geo_abb)
-  }
+  # }
 
   dplyr::filter(geos_table, sumlevel == sum_level)
 }
 
+
 make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
 
+  if (span == 5L) {
 
-  if (endyear >= 2010) {
-
-    geo_col_names <- glue("{docs_dir}/{endyear}_SFGeoFileTemplate.xls") %>%
-      readxl::read_excel(n_max = 0) %>%
-      names() %>%
-      stringr::str_to_lower()
-
-    if (endyear == 2010 && span == 5) {
-
-      geos_table_raw <- readr::read_table(
-        glue("{data_dir}/g{endyear}{span}{geo_abb}.txt"),
-        col_names = geo_col_names,
-        col_types = readr::cols(.default = "c")
-      )
-    } else {
-
-      geos_table_raw <- readr::read_csv(
-        glue("{data_dir}/g{endyear}{span}{geo_abb}.csv"),
-        col_names = geo_col_names,
-        col_types = readr::cols(.default = "c")
-      )
-    }
-
-  } else if (endyear == 2009L) {
-
-    # TODO: template file missing fro 2009, try minigeo.xls
-
-  } else {
-
-    # no template files in these years
-    # so need to get col names and positions from sas programs
-    geo_fwf_cols <- get_geo_fwf_cols(endyear)
-
-    geos_table_raw <- readr::read_fwf(
-      glue("{data_dir}/g{endyear}{span}{geo_abb}.txt"),
-      col_positions = geo_fwf_cols,
-      col_types = readr::cols(.default = "c")
+    geo_cols <- c(
+      "state"    = "skip",
+      "logrecno" = "text",
+      "geoid"    = "text",
+      "geo_name" = "skip"
     )
+
+    geos_table_raw <- readxl::read_xls(
+      path = glue("{docs_dir}/{geo_abb}.xls"),
+      col_names = names(geo_cols),
+      col_types = geo_cols,
+      skip = 1
+    )
+
+  } else if (span == 1L) {
+
+    if (endyear <= 2008L) {
+
+      # no template files in these years
+      # so need to get col names and positions from sas programs
+      geo_fwf_cols <- get_geo_fwf_cols(endyear)
+
+      geos_table_raw <- readr::read_fwf(
+        glue("{data_dir}/g{endyear}{span}{geo_abb}.txt"),
+        col_positions = geo_fwf_cols,
+        col_types = readr::cols(.default = "c")
+      )
+
+    } else if (endyear <=2013L) {
+
+      geo_cols <- c(
+        "logrecn0" = "text",
+        "geoid"    = "text",
+        "geo_name" = "skip"
+      )
+
+      geos_filename <- dplyr::case_when(
+        endyear <= 2012L ~ "Mini_Geofile.xls",
+        endyear == 2013L ~ "1_year_Mini_Geo.xls"
+      )
+
+      geos_table_raw <- readxl::read_xls(
+        path = glue("{docs_dir}/{geos_filename}"),
+        sheet = stringr::str_to_upper(geo_abb),
+        col_names = names(geo_cols),
+        col_types = geo_cols,
+        skip = 1
+      )
+
+    } else if (endyear >= 2014L) {
+
+      geo_cols <- c(
+        "logrecn0" = "text",
+        "geoid"    = "text",
+        "geo_name" = "skip"
+      )
+
+      geos_table_raw <- readxl::read_xlsx(
+        path = glue("{docs_dir}/1_year_Mini_Geo.xlsx"),
+        sheet = stringr::str_to_upper(geo_abb),
+        col_names = names(geo_cols),
+        col_types = geo_cols,
+        skip = 1
+      )
+
+    }
   }
 
   geos_table_raw %>%
-    dplyr::select(c("logrecno", "geoid", "sumlevel")) %>%
+    dplyr::mutate(sumlevel = stringr::str_sub(geoid, 1, 3)) %>%
     readr::write_rds(glue("{data_dir}/geos_table.rds"))
 }
 
@@ -144,7 +176,7 @@ get_geo_fwf_cols <- function(endyear) {
     readr::fwf_cols(
       # fileid = c(1, 6),
       # stusab = c(7, 8),
-      sumlevel = c(9, 11),
+      # sumlevel = c(9, 11),
       # component = c(12, 13),
       logrecno = c(14, 20),
       # us = c(21, 21),
@@ -175,8 +207,8 @@ get_geo_fwf_cols <- function(endyear) {
       # cd1990 = c(99, 100),
       # fipsmcd = c(101, 105),
       # fipspl = c(106, 110),
-      geoid = c(111, 150),
-      name = c(151, NA)
+      geoid = c(111, 150)
+      # name = c(151, NA)
     )
   } else if (endyear %in% 2006:2007) {
 
@@ -187,7 +219,7 @@ get_geo_fwf_cols <- function(endyear) {
     readr::fwf_cols(
       # fileid = c(1, 6),
       # stusab = c(7, 8),
-      sumlevel = c(9, 11),
+      # sumlevel = c(9, 11),
       # component = c(12, 13),
       logrecno = c(14, 20),
       # us = c(21, 21),
@@ -233,8 +265,8 @@ get_geo_fwf_cols <- function(endyear) {
       # uga = c(161, 165),
       # puma5 = c(166, 170),
       # puma1 = c(171, 175),
-      geoid = c(176, 215),
-      name = c(216, NA)
+      geoid = c(176, 215)
+      # name = c(216, NA)
     )
   } else if (endyear == 2008L) {
 
@@ -243,7 +275,7 @@ get_geo_fwf_cols <- function(endyear) {
     readr::fwf_cols(
       # fileid = c(1, 6),
       # stusab = c(7, 8),
-      sumlevel = c(9, 11),
+      # sumlevel = c(9, 11),
       # component = c(12, 13),
       logrecno = c(14, 20),
       # us = c(21, 21),
@@ -289,8 +321,8 @@ get_geo_fwf_cols <- function(endyear) {
       # uga = c(161, 165),
       # puma5 = c(166, 170),
       # puma1 = c(171, 175),
-      geoid = c(176, 215),
-      name = c(216, NA)
+      geoid = c(176, 215)
+      # name = c(216, NA)
     )
   }
 }

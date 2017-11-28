@@ -209,8 +209,7 @@ import_values <- function(seq,
       progress = FALSE
     )
 
-  # Some seq files are empty b/c they are for PR specific tables, so for a state
-  # they are just empty.
+  # For some geos/seqs the dataset is empty b/c they're for PR specific tables
   if (!length(estimates)) {
     return(tibble::tibble())
   }
