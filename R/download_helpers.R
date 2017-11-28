@@ -93,7 +93,7 @@ download_docs <- function(docs_dir, endyear, span, geo_abb) {
     geos_base_url <- dplyr::case_when(
       endyear <= 2012L              ~ glue_chr("{docs_base_url}/{span}_year/geography"),
       endyear == 2013L && span ==5L ~ glue_chr("{docs_base_url}/geography/{span}_year_Geo"),
-      endyear >= 2014L && span ==5L ~ glue_chr("{docs_base_url}/geography/{span}_year_geo"),
+      endyear >= 2014L && span ==5L ~ glue_chr("{docs_base_url}/geography/{span}yr_year_geo"),
       endyear >= 2013L && span ==1L ~ glue_chr("{docs_base_url}/geography")
     )
 
