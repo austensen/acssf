@@ -49,11 +49,13 @@ download_docs <- function(docs_dir, endyear, span, geo_abb) {
       docs_file_url <- dplyr::case_when(
         # weird problem of wrong files in FTP for 2006, found correct version in
         # different folder
-        endyear == 2006        ~ "http://www2.census.gov/acs2006/merge_5_6_final.xls",
-        endyear == 2007        ~ glue_chr("{docs_base_url}/{span}_year/merge_5_6_final.xls"),
-        endyear == 2008        ~ glue_chr("{docs_base_url}/{span}_year/user_tools/merge_5_6.xls"),
-        endyear %in% 2009:2012 ~ glue_chr("{docs_base_url}/{span}_year/user_tools/Sequence_Number_and_Table_Number_Lookup.xls"),
-        endyear >=2013         ~ glue_chr("{docs_base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.xls")
+        endyear == 2006                ~ "http://www2.census.gov/acs2006/merge_5_6_final.xls",
+        endyear == 2007                ~ glue_chr("{docs_base_url}/{span}_year/merge_5_6_final.xls"),
+        endyear == 2008                ~ glue_chr("{docs_base_url}/{span}_year/user_tools/merge_5_6.xls"),
+        endyear == 2009 && span == 1L  ~ glue_chr("{docs_base_url}/{span}_year/user_tools/merge_5_6.xls"),
+        endyear == 2009 && span == 5L  ~ glue_chr("{docs_base_url}/{span}_year/user_tools/Sequence_Number_and_Table_Number_Lookup.xls"),
+        endyear %in% 2010:2012         ~ glue_chr("{docs_base_url}/{span}_year/user_tools/Sequence_Number_and_Table_Number_Lookup.xls"),
+        endyear >=2013                 ~ glue_chr("{docs_base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.xls")
       )
 
       # standardize when saving local copy for easier lookup later
@@ -90,7 +92,8 @@ download_docs <- function(docs_dir, endyear, span, geo_abb) {
 
     geos_base_url <- dplyr::case_when(
       endyear <= 2012L              ~ glue_chr("{docs_base_url}/{span}_year/geography"),
-      endyear >= 2013L && span ==5L ~ glue_chr("{docs_base_url}/geography/{span}_year_Geo"),
+      endyear == 2013L && span ==5L ~ glue_chr("{docs_base_url}/geography/{span}_year_Geo"),
+      endyear >= 2014L && span ==5L ~ glue_chr("{docs_base_url}/geography/{span}_year_geo"),
       endyear >= 2013L && span ==1L ~ glue_chr("{docs_base_url}/geography")
     )
 
@@ -115,6 +118,7 @@ download_docs <- function(docs_dir, endyear, span, geo_abb) {
 
 download_data <- function(data_dir, endyear, span, geo_name) {
 
+  # TODO: warn if no files are found on FTP (census error)
   # TODO: add warning if files already exist
   if (!file.exists(data_dir)) {
 

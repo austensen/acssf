@@ -63,6 +63,6 @@ acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
   )
 
   zip_files <- dir(raw_dir, pattern = "\\.zip$", recursive = TRUE, full.names = TRUE)
-  file.remove(zip_files, showWarnings = FALSE)
+  if (length(zipfiles)) invisible(file.remove(zip_files))
 
 }
