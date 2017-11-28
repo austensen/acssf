@@ -66,7 +66,7 @@ make_seq_col_lookup <- function(docs_dir, endyear) {
 
 # Geos --------------------------------------------------------------------
 
-get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, sum_level) {
+get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, .sum_level) {
 
   # TODO: once al bugs fixed, check if file exists before making
 
@@ -84,7 +84,7 @@ get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, sum_level
       geo_abb = geo_abb)
   # }
 
-  dplyr::filter(geos_table, sumlevel == sum_level)
+  dplyr::filter(geos_table, sum_level == .sum_level)
 }
 
 
@@ -93,10 +93,10 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
   if (span == 5L) {
 
     geo_cols <- c(
-      "state"    = "skip",
-      "logrecno" = "text",
-      "geoid"    = "text",
-      "geo_name" = "skip"
+      "state"      = "skip",
+      "logrecno"   = "text",
+      "geoid_full" = "text",
+      "geo_name"   = "text"
     )
 
     geos_table_raw <- readxl::read_xls(
@@ -120,12 +120,12 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
         col_types = readr::cols(.default = "c")
       )
 
-    } else if (endyear <=2013L) {
+    } else if (endyear <=2012L) {
 
       geo_cols <- c(
-        "logrecn0" = "text",
-        "geoid"    = "text",
-        "geo_name" = "skip"
+        "logrecno"   = "text",
+        "geoid_full" = "text",
+        "geo_name"   = "text"
       )
 
       geos_filename <- dplyr::case_when(
@@ -133,25 +133,42 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
         endyear == 2013L ~ "1_year_Mini_Geo.xls"
       )
 
+      geo_abb <- dplyr::case_when(
+        endyear <= 2010L       ~ stringr::str_to_upper(geo_abb),
+        endyear %in% 2011:2012 ~ geo_abb
+      )
+
       geos_table_raw <- readxl::read_xls(
         path = glue("{docs_dir}/{geos_filename}"),
-        sheet = stringr::str_to_upper(geo_abb),
+        sheet = geo_abb,
         col_names = names(geo_cols),
         col_types = geo_cols,
         skip = 1
       )
 
-    } else if (endyear >= 2014L) {
+    } else if (endyear >= 2013L) {
 
       geo_cols <- c(
-        "logrecn0" = "text",
-        "geoid"    = "text",
-        "geo_name" = "skip"
+        "logrecno"   = "text",
+        "geoid_full" = "text",
+        "geo_name"   = "text"
+      )
+
+      # 14 small,
+      geos_filename <- dplyr::case_when(
+        endyear == 2013L ~ "1_year_Mini_Geo.xls", # actually an xlsx file, saved as ".xls"
+        endyear >= 2014L ~ "1_year_Mini_Geo.xlsx"
+      )
+
+      geo_abb <- dplyr::case_when(
+        endyear == 2013L ~ stringr::str_to_upper(geo_abb),
+        endyear == 2014L ~ geo_abb,
+        endyear >= 2015L ~ stringr::str_to_upper(geo_abb)
       )
 
       geos_table_raw <- readxl::read_xlsx(
-        path = glue("{docs_dir}/1_year_Mini_Geo.xlsx"),
-        sheet = stringr::str_to_upper(geo_abb),
+        path = glue("{docs_dir}/{geos_filename}"),
+        sheet = geo_abb,
         col_names = names(geo_cols),
         col_types = geo_cols,
         skip = 1
@@ -161,7 +178,9 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
   }
 
   geos_table_raw %>%
-    dplyr::mutate(sumlevel = stringr::str_sub(geoid, 1, 3)) %>%
+    dplyr::mutate(
+      sum_level = stringr::str_sub(geoid_full, 1, 3),
+      geoid = stringr::str_extract(geoid_full, "\\d+$")) %>%
     readr::write_rds(glue("{data_dir}/geos_table.rds"))
 }
 
@@ -207,8 +226,8 @@ get_geo_fwf_cols <- function(endyear) {
       # cd1990 = c(99, 100),
       # fipsmcd = c(101, 105),
       # fipspl = c(106, 110),
-      geoid = c(111, 150)
-      # name = c(151, NA)
+      geoid_full = c(111, 150),
+      geo_name = c(151, NA)
     )
   } else if (endyear %in% 2006:2007) {
 
@@ -265,8 +284,8 @@ get_geo_fwf_cols <- function(endyear) {
       # uga = c(161, 165),
       # puma5 = c(166, 170),
       # puma1 = c(171, 175),
-      geoid = c(176, 215)
-      # name = c(216, NA)
+      geoid_full = c(176, 215),
+      geo_name = c(216, NA)
     )
   } else if (endyear == 2008L) {
 
@@ -321,8 +340,8 @@ get_geo_fwf_cols <- function(endyear) {
       # uga = c(161, 165),
       # puma5 = c(166, 170),
       # puma1 = c(171, 175),
-      geoid = c(176, 215)
-      # name = c(216, NA)
+      geoid_full = c(176, 215),
+      geo_name = c(216, NA)
     )
   }
 }
