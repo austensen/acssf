@@ -113,11 +113,6 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
 
     } else if (endyear <=2012L) {
 
-      geo_cols <- c(
-        "logrecno"   = "text",
-        "geoid_full" = "text",
-        "geo_name"   = "text"
-      )
 
       geos_filename <- dplyr::case_when(
         endyear <= 2012L ~ "Mini_Geofile.xls",
@@ -129,23 +124,13 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
         endyear %in% 2011:2012 ~ geo_abb
       )
 
-      geos_table_raw <- readxl::read_xls(
-        path = glue("{docs_dir}/{geos_filename}"),
-        sheet = geo_abb,
-        col_names = names(geo_cols),
-        col_types = geo_cols,
-        skip = 1
-      )
+      geos_table_raw <- glue("{docs_dir}/{geos_filename}") %>%
+        readxl::read_xls(sheet = geo_abb, col_types = "text", skip = 1) %>%
+        dplyr::select(1:3) %>%
+        purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
 
     } else if (endyear >= 2013L) {
 
-      geo_cols <- c(
-        "logrecno"   = "text",
-        "geoid_full" = "text",
-        "geo_name"   = "text"
-      )
-
-      # 14 small,
       geos_filename <- dplyr::case_when(
         endyear == 2013L ~ "1_year_Mini_Geo.xls", # actually an xlsx file, saved as ".xls"
         endyear >= 2014L ~ "1_year_Mini_Geo.xlsx"
@@ -157,13 +142,10 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
         endyear >= 2015L ~ stringr::str_to_upper(geo_abb)
       )
 
-      geos_table_raw <- readxl::read_xlsx(
-        path = glue("{docs_dir}/{geos_filename}"),
-        sheet = geo_abb,
-        col_names = names(geo_cols),
-        col_types = geo_cols,
-        skip = 1
-      )
+      geos_table_raw <- glue("{docs_dir}/{geos_filename}") %>%
+        readxl::read_xlsx(sheet = geo_abb, col_types = "text", skip = 1) %>%
+        dplyr::select(1:3) %>%
+        purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
 
     }
   }
