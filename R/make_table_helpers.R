@@ -92,19 +92,10 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
 
   if (span == 5L) {
 
-    geo_cols <- c(
-      "state"      = "skip",
-      "logrecno"   = "text",
-      "geoid_full" = "text",
-      "geo_name"   = "text"
-    )
-
-    geos_table_raw <- readxl::read_xls(
-      path = glue("{docs_dir}/{geo_abb}.xls"),
-      col_names = names(geo_cols),
-      col_types = geo_cols,
-      skip = 1
-    )
+    geos_table_raw <- glue("{docs_dir}/{geo_abb}.xls") %>%
+      readxl::read_xls(col_types = "text", skip = 1) %>%
+      dplyr::select(1:4) %>%
+      purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
 
   } else if (span == 1L) {
 
