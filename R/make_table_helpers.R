@@ -94,7 +94,7 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
 
     geos_table_raw <- glue("{docs_dir}/{geo_abb}.xls") %>%
       readxl::read_xls(col_types = "text", skip = 1) %>%
-      dplyr::select(1:4) %>%
+      dplyr::select(2:4) %>%
       purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
 
   } else if (span == 1L) {
