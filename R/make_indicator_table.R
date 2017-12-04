@@ -37,7 +37,8 @@ make_indicator_table <- function(acs_dir, out_dir = NULL, endyear, span, sum_lev
     geoid_full = "c",
     geoid = "c",
     sum_level = "c",
-    geo_type = "c"
+    geo_type = "c",
+    geo_name = "c"
   )
 
   # TODO: consider writing to csv after each file, with map_dfr it might get too
