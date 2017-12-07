@@ -98,7 +98,8 @@ download_docs <- function(docs_dir, endyear, span, geo_abb) {
     )
 
     geos_filename <- dplyr::case_when(
-      span == 5L                     ~ glue_chr("{geo_abb}.xls"),
+      span == 5L && endyear <= 2015L ~ glue_chr("{geo_abb}.xls"),
+      span == 5L && endyear >= 2016L ~ glue_chr("{stringr::str_to_upper(geo_abb)}.xls"),
       span == 1L && endyear <= 2012L ~ "Mini_Geofile.xls",
       span == 1L && endyear == 2013L ~ "1_year_Mini_Geo.xls",
       span == 1L && endyear >= 2014L ~ "1_year_Mini_Geo.xlsx"
