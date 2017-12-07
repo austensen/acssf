@@ -14,7 +14,7 @@ stop_glue <- function(..., .envir = parent.frame()) {
 
 
 # Some functions get confused by type = "glue"
-# TODO: test on new glue release, bug should be fixed soon
+# TODO: test on new glue release, bug fixed in https://github.com/tidyverse/glue/issues/66
 glue_chr <- function(..., .sep = "", .envir = parent.frame(), .open = "{", .close = "}") {
   as.character(glue::glue(..., .sep = .sep, .envir = .envir, .open = .open, .close = .close))
 }

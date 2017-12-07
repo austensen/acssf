@@ -6,7 +6,9 @@
 #' @param geo character or numberic, state FIPS code or state (or US) abreviation
 #' @param id character, type of geogrphy ID to return ("name", "abb", or "fips")
 #'
-#' @keywords internal
+#' @return Character(1) of either geography name, abbreviation, or FIPS code.
+#'
+
 swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
 
   geo <- geo %>% stringr::str_trim() %>% stringr::str_to_lower()
@@ -41,6 +43,19 @@ swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
   stop_glue("{geo} is not a valid FIPS code or abbreviation.")
 }
 
+
+
+#' Validate function arguments
+#'
+#' @param endyear \[`integer(1)`]: The endyear of the ACS sample. 2005 through 2016 are
+#'   available.
+#' @param span \[`integer(1)`]: The span of years for ACS estimates. ACS 1-year, and
+#'   5-year surveys are supported.
+#' @param overwrite \[`logical(1)`]:  Whether existing versions of these files be overwriten.
+#'   Defaults to `FALSE`.
+#'
+#' @return None
+#'
 
 validate_args <- function(endyear, span, overwrite = NULL) {
 
