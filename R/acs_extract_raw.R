@@ -1,6 +1,6 @@
 #' Create csv file/dataframe of ACS variables for a given sample and geography
 #'
-#' This function parses the data downloded by [download_acs()] and creates a csv
+#' This function parses the data downloded by [acs_download()] and creates a csv
 #' file for the selected parameters.
 #'
 #' @param acs_dir \[`character(1)`]: The root directory in which all the ACS
@@ -22,7 +22,7 @@
 #'
 #' @export
 #'
-acs_make_table <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
+acs_extract_raw <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
 
   # TODO: check that raw data folder exists
 
