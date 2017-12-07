@@ -1,6 +1,6 @@
 #' Create indicators from clean ACS SF data
 #'
-#' Import all csv files for a given geography type, endyear, and span that were created by [acs_make_raw()], and apply a function to each file to further process data from.
+#' Import all csv files for a given geography type, endyear, and span that were created by [acs_extract_raw()], and apply a function to each file to further process data from.
 #'
 #' @param acs_dir \[`character(1)`]: The root directory in which all the ACS SF data will be saved.
 #' @param out_dir \[`character(1)`]: The directory to save indicator files to. Defults to "`acs_dir`/Output".

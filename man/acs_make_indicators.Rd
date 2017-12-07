@@ -34,5 +34,5 @@ available.}
   This syntax allows you to create very compact anonymous functions.}
 }
 \description{
-Import all csv files for a given geography type, endyear, and span that were created by [acs_make_raw()], and apply a function to each file to further process data from.
+Import all csv files for a given geography type, endyear, and span that were created by [acs_extract_raw()], and apply a function to each file to further process data from.
 }
