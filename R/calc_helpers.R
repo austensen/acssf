@@ -125,3 +125,17 @@ acs_drop_margins <- function(df) {
   dplyr::select(df, -dplyr::matches("[bc]\\d{5}[a-z]*_m\\d{3}"))
 }
 
+
+# TODO: document, and make _all_cols_ consistent with _vars_table_ from
+# acs_extract_raw()
+add_na_cols <- function(df, all_cols) {
+
+  new_cols <- purrr::discard(all_cols, ~.x %in% names(df))
+
+  new_cols_df <- new_cols %>%
+    purrr::map(~rep(NA_real_, nrow(df))) %>%
+    purrr::set_names(new_cols) %>%
+    tibble::as_tibble()
+
+  dplyr::bind_cols(df, new_cols_df)
+}
