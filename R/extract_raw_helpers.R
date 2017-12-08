@@ -92,6 +92,11 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
 
   if (span == 5L) {
 
+    geo_abb <- dplyr::case_when(
+      endyear >= 2015L ~ geo_abb,
+      endyear >= 2016L ~ stringr::str_to_upper(geo_abb)
+    )
+
     geos_table_raw <- glue("{docs_dir}/{geo_abb}.xls") %>%
       readxl::read_xls(col_types = "text", skip = 1) %>%
       dplyr::select(2:4) %>%
