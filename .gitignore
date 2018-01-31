@@ -3,3 +3,4 @@
 .RData
 ignored/
 .DS_Store
+debug.R
