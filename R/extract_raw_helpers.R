@@ -81,7 +81,8 @@ get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, .sum_leve
       docs_dir = docs_dir,
       endyear = endyear,
       span = span,
-      geo_abb = geo_abb)
+      geo_abb = geo_abb
+    )
   # }
 
   dplyr::filter(geos_table, sum_level == .sum_level)
@@ -92,15 +93,20 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
 
   if (span == 5L) {
 
-    geo_abb <- dplyr::case_when(
-      endyear >= 2015L ~ geo_abb,
-      endyear >= 2016L ~ stringr::str_to_upper(geo_abb)
-    )
+    if (endyear >= 2016) {
 
-    geos_table_raw <- glue("{docs_dir}/{geo_abb}.xls") %>%
-      readxl::read_xls(col_types = "text", skip = 1) %>%
-      dplyr::select(2:4) %>%
-      purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
+      geos_table_raw <- glue("{docs_dir}/{geo_abb}.xlsx") %>%
+        readxl::read_xlsx(col_types = "text", skip = 1) %>%
+        dplyr::select(2:4) %>%
+        purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
+
+    } else if (endyear <= 2015) {
+
+      geos_table_raw <- glue("{docs_dir}/{geo_abb}.xls") %>%
+        readxl::read_xls(col_types = "text", skip = 1) %>%
+        dplyr::select(2:4) %>%
+        purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
+    }
 
   } else if (span == 1L) {
 
@@ -158,7 +164,10 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
   geos_table_raw %>%
     dplyr::mutate(
       sum_level = stringr::str_sub(geoid_full, 1, 3),
-      geoid = stringr::str_extract(geoid_full, "\\d+$")) %>%
+      geoid = stringr::str_extract(geoid_full, "\\d+$"),
+      # fix issues with Ñ
+      geo_name = suppressWarnings(stringi::stri_enc_toascii(geo_name)) %>%
+                      stringr::str_replace("[\\032]|±", "n")) %>%
     readr::write_rds(glue("{data_dir}/geos_table.rds"))
 }
 
