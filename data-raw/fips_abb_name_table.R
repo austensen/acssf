@@ -55,4 +55,4 @@ fips_abb_name_table <- tibble::tribble(
    "wy",  "56",             "Wyoming"
   )
 
-devtools::use_data(fips_abb_name_table, overwrite = TRUE, internal = TRUE)
+devtools::use_data(fips_abb_name_table, overwrite = TRUE)

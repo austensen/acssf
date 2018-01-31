@@ -12,4 +12,4 @@ sum_level_info <- tibble::tribble(
    "blockgroup",      "150",     "5",  "2009-2016"
 )
 
-devtools::use_data(sum_level_info)
+devtools::use_data(sum_level_info, overwrite = TRUE)
