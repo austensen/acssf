@@ -31,6 +31,11 @@ acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
   geo_abb <- swap_geo_id(geo, "abb")
   geo_name <- swap_geo_id(geo_abb, "name")
 
+  # capitalize "of" in 5-yr data
+  if (span == 5L && geo_abb == "dc") {
+    geo_name <- "DistrictOfColumbia"
+  }
+
   raw_dir <- glue("{acs_dir}/Raw/{endyear}_{span}")
 
   dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
@@ -64,5 +69,4 @@ acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
 
   zip_files <- dir(raw_dir, pattern = "\\.zip$", recursive = TRUE, full.names = TRUE)
   if (length(zip_files)) invisible(file.remove(zip_files))
-
 }

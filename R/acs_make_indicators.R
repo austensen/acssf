@@ -25,7 +25,6 @@
 #' @export
 #'
 acs_make_indicators <- function(acs_dir, out_dir = NULL, endyear, span, sum_level, .f = NULL) {
-
   if (is.null(.f)) {
     .f <- purrr::as_mapper(~return(.x))
   } else {

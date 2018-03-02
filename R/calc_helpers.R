@@ -129,7 +129,6 @@ acs_drop_margins <- function(df) {
 # TODO: document, and make _all_cols_ consistent with _vars_table_ from
 # acs_extract_raw()
 add_na_cols <- function(df, all_cols) {
-
   new_cols <- purrr::discard(all_cols, ~.x %in% names(df))
 
   new_cols_df <- new_cols %>%

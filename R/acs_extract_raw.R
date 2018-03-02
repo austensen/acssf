@@ -63,6 +63,10 @@ acs_extract_raw <- function(acs_dir, endyear, span, geo, sum_level, vars_table) 
   geo_abb <- swap_geo_id(geo, "abb")
   geo_name <- swap_geo_id(geo, "name")
 
+  # capitalize "of" in 5-yr data
+  if (span == 5L && geo_abb == "dc") {
+    geo_name <- "DistrictOfColumbia"
+  }
 
 
   trct_blkgrp <- sum_level_name %in% c("tract", "blockgroup")
@@ -143,13 +147,16 @@ acs_extract_raw <- function(acs_dir, endyear, span, geo, sum_level, vars_table) 
       table_var = stringr::str_replace(
         table_var,
         "_",
-        stringr::str_c("_", stringr::str_sub(type, 1, 1)))) %>%
+        stringr::str_c("_", stringr::str_sub(type, 1, 1))
+      )
+    ) %>%
     dplyr::select(-type) %>%
     tidyr::spread(table_var, value) %>%
     dplyr::mutate(geo_type = sum_level_name) %>%
     dplyr::select(
       endyear, span, geoid_full, geoid, sum_level, geo_type, geo_name,
-      dplyr::everything())
+      dplyr::everything()
+    )
 
 
   readr::write_csv(
@@ -157,7 +164,6 @@ acs_extract_raw <- function(acs_dir, endyear, span, geo, sum_level, vars_table) 
     glue("{clean_dir}/{geo_abb}_{sum_level_name}_{endyear}_{span}.csv"),
     na = ""
   )
-
 }
 
 
@@ -170,7 +176,6 @@ import_values <- function(seq,
                           span,
                           geo_abb,
                           .pb = NULL) {
-
   if ((!is.null(.pb)) && inherits(.pb, "Progress") && (.pb$i < .pb$n)) {
     .pb$tick()$print()
   }
@@ -200,7 +205,8 @@ import_values <- function(seq,
       col_names = c(first_cols, seq_cols),
       col_types = value_cols,
       na = c("", ".", "..0"),
-      progress = FALSE)
+      progress = FALSE
+    )
 
   # For some geos/seqs the dataset is empty b/c they're for PR specific tables
   if (!length(estimates)) {
@@ -218,7 +224,8 @@ import_values <- function(seq,
       col_names = c(first_cols, seq_cols),
       col_types = value_cols,
       na = c("", "."),
-      progress = FALSE) %>%
+      progress = FALSE
+    ) %>%
     dplyr::right_join(geos_table, by = "logrecno") %>%
     dplyr::select(dplyr::one_of(geo_cols), dplyr::one_of(seq_cols)) %>%
     tidyr::gather("table_var", "margin", -dplyr::one_of(geo_cols))
@@ -232,8 +239,6 @@ import_values <- function(seq,
     dplyr::semi_join(vars_table, by = "table_var") %>%
     dplyr::mutate(
       endyear = endyear,
-      span = span)
-
+      span = span
+    )
 }
-
-

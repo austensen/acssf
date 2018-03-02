@@ -10,19 +10,16 @@
 #'
 
 swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
-
   geo <- geo %>% stringr::str_trim() %>% stringr::str_to_lower()
 
-  if (geo %in% c("as",  "60", "gu",  "66", "vi",  "78")) {
+  if (geo %in% c("as", "60", "gu", "66", "vi", "78")) {
     stop_glue("Data is not available for American Samoa, Guam, or Virgin Islands.")
   }
 
   if (stringr::str_detect(geo, "^[[:digit:]]+$")) {
-
     geo <- stringr::str_pad(geo, 2, "left", "0")
 
     if (geo %in% fips_abb_name_table[["fips"]]) {
-
       ret <- fips_abb_name_table %>%
         dplyr::filter(fips == geo) %>%
         dplyr::pull(id)
@@ -30,9 +27,7 @@ swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
       return(ret)
     }
   } else if (stringr::str_detect(geo, "^[[:alpha:]]+")) {
-
     if (nchar(geo) == 2 && geo %in% fips_abb_name_table[["abb"]]) {
-
       ret <- fips_abb_name_table %>%
         dplyr::filter(abb == geo) %>%
         dplyr::pull(id)
@@ -58,7 +53,6 @@ swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
 #'
 
 validate_args <- function(endyear, span, overwrite = NULL) {
-
   endyear <- as.integer(endyear)
   if (is.na(endyear)) {
     stop_glue("`endyear` must be an integer.")
@@ -84,5 +78,4 @@ validate_args <- function(endyear, span, overwrite = NULL) {
   if (!is.null(overwrite) && !is.logical(overwrite)) {
     stop_glue("`overwrite` must be logical.")
   }
-
 }

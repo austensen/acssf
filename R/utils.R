@@ -4,7 +4,7 @@ msg_glue <- function(..., .envir = parent.frame()) {
   message(glue::glue(..., .envir = .envir))
 }
 
-warn_glue <- function(...,.envir = parent.frame()) {
+warn_glue <- function(..., .envir = parent.frame()) {
   warning(glue::glue(..., .envir = .envir), call. = FALSE)
 }
 
@@ -18,4 +18,3 @@ stop_glue <- function(..., .envir = parent.frame()) {
 glue_chr <- function(..., .sep = "", .envir = parent.frame(), .open = "{", .close = "}") {
   as.character(glue::glue(..., .sep = .sep, .envir = .envir, .open = .open, .close = .close))
 }
-
