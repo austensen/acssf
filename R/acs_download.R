@@ -3,22 +3,22 @@
 #' This function downloads American Community Survey (ACS) Summary File (SF)
 #' data from the Census Bureau's FTP site.
 #'
-#' @param acs_dir The root directory in which all the ACS SF data will be saved.
-#' @param endyear The endyear of the ACS sample. 2005 through 2016 are
+#' @param acs_dir \[`character(1)`]: The root directory in which all the ACS SF data will be saved.
+#' @param endyear \[`integer(1)`]: The endyear of the ACS sample. 2005 through 2016 are
 #'   available.
-#' @param span The span of years for ACS estimates. ACS contains 1-, 3-, and
-#'   5-year surveys.
-#' @param geo The 2-letter abbreviation for the state for which data will be
-#'   downloaded. For geogrpahies that do not nest within states, use `"us"`.
-#' @param overwrite Whether existing versions of these files be overwriten.
+#' @param span \[`integer(1)`]: The span of years for ACS estimates. ACS 1-year, and
+#'   5-year surveys are supported.
+#' @param geo \[`character(1)`]: The 2-letter abbreviation for the state for which data will be
+#'   downloaded. For geogrpahies that do not nest within states, use `"US"`.
+#' @param overwrite \[`logical(1)`]:  Whether existing versions of these files be overwriten.
 #'   Defaults to `FALSE`.
 #'
 #' @export
 
 acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
 
-  # TODO: test for 3- & 5-year, add support for taking vector of geos
-  # TODO: when ready, consider switching using https://github.com/ropensci/ftp
+  # TODO: add support for taking vector of geos
+  # TODO: when package ready, consider switch to https://github.com/ropensci/ftp
 
   dir.create(acs_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -28,8 +28,13 @@ acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
     overwrite = overwrite
   )
 
-  geo_name <- swap_geo_id(geo, "name")
+  geo_abb <- swap_geo_id(geo, "abb")
+  geo_name <- swap_geo_id(geo_abb, "name")
 
+  # capitalize "of" in 5-yr data
+  if (span == 5L && geo_abb == "dc") {
+    geo_name <- "DistrictOfColumbia"
+  }
 
   raw_dir <- glue("{acs_dir}/Raw/{endyear}_{span}")
 
@@ -49,9 +54,10 @@ acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
   on.exit(options(op))
 
   download_docs(
-    doc_dir = glue("{raw_dir}/_docs"),
+    docs_dir = glue("{raw_dir}/_docs"),
     endyear = endyear,
-    span = span
+    span = span,
+    geo_abb = geo_abb
   )
 
   download_data(
@@ -60,4 +66,7 @@ acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
     span = span,
     geo_name = geo_name
   )
+
+  zip_files <- dir(raw_dir, pattern = "\\.zip$", recursive = TRUE, full.names = TRUE)
+  if (length(zip_files)) invisible(file.remove(zip_files))
 }

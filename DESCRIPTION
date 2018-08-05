@@ -16,6 +16,7 @@ Imports:
     dplyr,
     tibble,
     purrr,
+    stringi,
     stringr,
     readr,
     readxl,

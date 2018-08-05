@@ -11,7 +11,9 @@ swap_geo_id(geo, id = c("name", "abb", "fips"))
 
 \item{id}{character, type of geogrphy ID to return ("name", "abb", or "fips")}
 }
+\value{
+Character(1) of either geography name, abbreviation, or FIPS code.
+}
 \description{
 Return desired geography variable from FIPS or abbreviation
 }
-\keyword{internal}

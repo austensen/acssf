@@ -1,6 +1,6 @@
 #' Create csv file/dataframe of ACS variables for a given sample and geography
 #'
-#' This function parses the data downloded by [download_acs()] and creates a csv
+#' This function parses the data downloded by [acs_download()] and creates a csv
 #' file for the selected parameters.
 #'
 #' @param acs_dir \[`character(1)`]: The root directory in which all the ACS
@@ -22,7 +22,7 @@
 #'
 #' @export
 #'
-acs_make_table <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
+acs_extract_raw <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
 
   # TODO: check that raw data folder exists
 
@@ -63,6 +63,10 @@ acs_make_table <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
   geo_abb <- swap_geo_id(geo, "abb")
   geo_name <- swap_geo_id(geo, "name")
 
+  # capitalize "of" in 5-yr data
+  if (span == 5L && geo_abb == "dc") {
+    geo_name <- "DistrictOfColumbia"
+  }
 
 
   trct_blkgrp <- sum_level_name %in% c("tract", "blockgroup")
@@ -93,7 +97,7 @@ acs_make_table <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
     endyear = endyear,
     span = span,
     geo_abb = geo_abb,
-    sum_level = sum_level
+    .sum_level = sum_level
   )
 
 
@@ -148,14 +152,9 @@ acs_make_table <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
     ) %>%
     dplyr::select(-type) %>%
     tidyr::spread(table_var, value) %>%
-    dplyr::mutate(
-      sum_level = stringr::str_extract(geoid, "^\\d{3}"),
-      geo_type = sum_level_name,
-      geoid_full = geoid,
-      geoid = stringr::str_extract(geoid, "\\d+$")
-    ) %>%
+    dplyr::mutate(geo_type = sum_level_name) %>%
     dplyr::select(
-      endyear, span, geoid_full, geoid, sum_level, geo_type,
+      endyear, span, geoid_full, geoid, sum_level, geo_type, geo_name,
       dplyr::everything()
     )
 
@@ -165,7 +164,6 @@ acs_make_table <- function(acs_dir, endyear, span, geo, sum_level, vars_table) {
     glue("{clean_dir}/{geo_abb}_{sum_level_name}_{endyear}_{span}.csv"),
     na = ""
   )
-
 }
 
 
@@ -178,7 +176,6 @@ import_values <- function(seq,
                           span,
                           geo_abb,
                           .pb = NULL) {
-
   if ((!is.null(.pb)) && inherits(.pb, "Progress") && (.pb$i < .pb$n)) {
     .pb$tick()$print()
   }
@@ -189,6 +186,8 @@ import_values <- function(seq,
 
   # get the table_vars for this seq number - these are the last columns
   seq_cols <- seq_col_lookup[[seq]]
+
+  geo_cols <- c("geoid_full", "geoid", "sum_level", "geo_name")
 
   # all the estimates/margins columns will be read as numeric (double)
   value_cols <- readr::cols(
@@ -209,8 +208,7 @@ import_values <- function(seq,
       progress = FALSE
     )
 
-  # Some seq files are empty b/c they are for PR specific tables, so for a state
-  # they are just empty.
+  # For some geos/seqs the dataset is empty b/c they're for PR specific tables
   if (!length(estimates)) {
     return(tibble::tibble())
   }
@@ -229,8 +227,8 @@ import_values <- function(seq,
       progress = FALSE
     ) %>%
     dplyr::right_join(geos_table, by = "logrecno") %>%
-    dplyr::select(geoid, seq_cols) %>%
-    tidyr::gather("table_var", "margin", -geoid)
+    dplyr::select(dplyr::one_of(geo_cols), dplyr::one_of(seq_cols)) %>%
+    tidyr::gather("table_var", "margin", -dplyr::one_of(geo_cols))
 
 
   # with estimates and margins sorted indentically can bind columns, then join
@@ -243,7 +241,4 @@ import_values <- function(seq,
       endyear = endyear,
       span = span
     )
-
 }
-
-

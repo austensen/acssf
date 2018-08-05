@@ -28,7 +28,6 @@ This function simply wraps the `dplyr` expression `select(df,
 \examples{
 
 library(dplyr)
-library(tibble)
 
 df <- tibble(
   endyear = 2009L,

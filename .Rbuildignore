@@ -7,3 +7,4 @@
 ^ignored$
 ^README\.RMD$
 ^\.DS_Store$
+^debug\.R
