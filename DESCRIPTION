@@ -3,7 +3,7 @@ Title: Download ACS Summary File Data and Build Database
 Version: 0.0.0.9000
 Authors@R: person("Maxwell", "Austensen", email = "fmaxwell.austensen@nyu.edu", role = c("aut", "cre"))
 Description: Download ACS Summary File data from FTP site, clean data, and create tables in database.
-Depends: R (>= 3.4.1)
+Depends: R (>= 3.5.1)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
