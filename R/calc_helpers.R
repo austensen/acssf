@@ -25,7 +25,7 @@ acs_vars <- function(..., .envir = parent.frame()) {
 pad_transformer <- function(code, envir) {
   if (stringr::str_detect(code, "[*]$")) {
     code <- stringr::str_replace(code, "[*]$", "")
-    res <- glue::evaluate(code, envir)
+    res <- glue::identity_transformer(code, envir)
     stringr::str_pad(res, 3, "left", "0")
   } else {
     glue::evaluate(code, envir)
