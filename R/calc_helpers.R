@@ -28,7 +28,7 @@ pad_transformer <- function(code, envir) {
     res <- glue::identity_transformer(code, envir)
     stringr::str_pad(res, 3, "left", "0")
   } else {
-    glue::evaluate(code, envir)
+    glue::identity_transformer(code, envir)
   }
 }
 
