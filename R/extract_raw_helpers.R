@@ -118,7 +118,7 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
       )
 
       geos_table_raw <- glue("{docs_dir}/{geos_filename}") %>%
-        readxl::read_xls(sheet = geo_abb, col_types = "text", skip = 1) %>%
+        readxl::read_xls(sheet = geo_abb, col_types = "text") %>%
         dplyr::select(1:3) %>%
         purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
     } else if (endyear >= 2013L) {
@@ -134,7 +134,7 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
       )
 
       geos_table_raw <- glue("{docs_dir}/{geos_filename}") %>%
-        readxl::read_xlsx(sheet = geo_abb, col_types = "text", skip = 1) %>%
+        readxl::read_xlsx(sheet = geo_abb, col_types = "text") %>%
         dplyr::select(1:3) %>%
         purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
     }
