@@ -60,7 +60,7 @@ make_seq_col_lookup <- function(docs_dir, endyear) {
 
 get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, .sum_level) {
 
-  # TODO: once al bugs fixed, check if file exists before making
+  # TODO: once all bugs fixed, check if file exists before making
 
   # if (file.exists(glue("{data_dir}/geos_table.rds"))) {
   #
@@ -85,12 +85,12 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
   if (span == 5L) {
     if (endyear >= 2016) {
       geos_table_raw <- glue("{docs_dir}/{geo_abb}.xlsx") %>%
-        readxl::read_xlsx(col_types = "text", skip = 1) %>%
+        readxl::read_xlsx(col_types = "text") %>%
         dplyr::select(2:4) %>%
         purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
     } else if (endyear <= 2015) {
       geos_table_raw <- glue("{docs_dir}/{geo_abb}.xls") %>%
-        readxl::read_xls(col_types = "text", skip = 1) %>%
+        readxl::read_xls(col_types = "text") %>%
         dplyr::select(2:4) %>%
         purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
     }
