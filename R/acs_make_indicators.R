@@ -65,6 +65,7 @@ acs_make_indicators <- function(acs_dir, out_dir = NULL, endyear, span, sum_leve
 
   # TODO: consider writing to csv after each file, with map_dfr it might get too
   # large for processing blockgroups
+  # TODO: if size isn't a problem, should consider changing to fst for speed
 
   glue("{acs_dir}/Clean/{endyear}_{span}") %>%
     dir(pattern = glue("_{sum_level_name}_"), full.names = TRUE) %>%

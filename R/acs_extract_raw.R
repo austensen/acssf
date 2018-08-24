@@ -32,8 +32,11 @@ acs_extract_raw <- function(acs_dir, endyear, span, geo, sum_level, vars_table) 
   )
 
 
-  # TODO: validate requested sumlevels. Are they available for requested geo type
-  # (state or US) and span (1 or 5 year). Add to validators.R file.
+  # TODO: validate requested sumlevels. Are they available for requested geo
+  # type (state or US) and span (1 or 5 year). Add to validators.R file. Should
+  # also allow sum_level an name or number, and use internal lookup to get the
+  # other. If they request something invalid, it should print a list of possible
+  # sum_levels as a message
 
   # Might also make a function that returns a table to help people learn the
   # summary level codes. eg. a table with cols: endyear, span, sumlevel code,
@@ -112,7 +115,7 @@ acs_extract_raw <- function(acs_dir, endyear, span, geo, sum_level, vars_table) 
   # push the final table (for that seq) to the database
 
   # TODO: see if possible to tweak progress bar to include time spent on
-  # reshaping adn writing csv after thir purrr step
+  # reshaping and writing csv after thir purrr step
 
   pb <- dplyr::progress_estimated(length(names(seq_col_lookup)))
 
@@ -158,7 +161,7 @@ acs_extract_raw <- function(acs_dir, endyear, span, geo, sum_level, vars_table) 
       dplyr::everything()
     )
 
-
+  # TODO: should consider changing this to use fst
   readr::write_csv(
     values_wide,
     glue("{clean_dir}/{geo_abb}_{sum_level_name}_{endyear}_{span}.csv"),
@@ -182,7 +185,7 @@ import_values <- function(seq,
 
 
   # these are always the first columns in the values files
-  first_cols <- c("fileid", "filetype", "stusab", "chariter", "sequence", "logrecno")
+  first_cols <- c("fileid", "filetype", "stusab", "character", "sequence", "logrecno")
 
   # get the table_vars for this seq number - these are the last columns
   seq_cols <- seq_col_lookup[[seq]]
@@ -195,13 +198,19 @@ import_values <- function(seq,
     fileid = "c",
     filetype = "c",
     stusab = "c",
-    chariter = "c",
+    character = "c",
     sequence = "c",
     logrecno = "c"
   )
 
-  estimates <- glue("{data_dir}/e{endyear}{span}{geo_abb}{seq}.txt") %>%
-    readr::read_csv(
+  est_file <- dplyr::case_when(
+    endyear == 2005L ~ glue("{data_dir}/{geo_abb}{seq}e.{endyear}-{span}yr"),
+    endyear >= 2006L ~ glue("{data_dir}/e{endyear}{span}{geo_abb}{seq}.txt")
+  )
+
+  message(seq)
+  estimates <- readr::read_csv(
+      file = est_file,
       col_names = c(first_cols, seq_cols),
       col_types = value_cols,
       na = c("", ".", "..0"),
@@ -219,8 +228,13 @@ import_values <- function(seq,
     tidyr::gather("table_var", "estimate", -geoid)
 
 
-  margins <- glue("{data_dir}/m{endyear}{span}{geo_abb}{seq}.txt") %>%
-    readr::read_csv(
+  mar_file <- dplyr::case_when(
+    endyear == 2005L ~ glue("{data_dir}/{geo_abb}{seq}m.{endyear}-{span}yr"),
+    endyear >= 2006L ~ glue("{data_dir}/m{endyear}{span}{geo_abb}{seq}.txt")
+  )
+
+  margins <- readr::read_csv(
+      file = mar_file,
       col_names = c(first_cols, seq_cols),
       col_types = value_cols,
       na = c("", "."),

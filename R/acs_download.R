@@ -19,6 +19,7 @@ acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
 
   # TODO: add support for taking vector of geos
   # TODO: when package ready, consider switch to https://github.com/ropensci/ftp
+  # TODO: add messages for steps in process (too many separate processes for bar)
 
   dir.create(acs_dir, recursive = TRUE, showWarnings = FALSE)
 

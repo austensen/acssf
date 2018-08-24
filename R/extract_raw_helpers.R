@@ -22,8 +22,68 @@ get_seq_col_lookup <- function(docs_dir, endyear) {
 
 make_seq_col_lookup <- function(docs_dir, endyear) {
   if (endyear == 2005) {
-    # TODO: add code to parse multiple seq tables for seq/vars
-    stop_glue("Need to add 2005 functionality")
+
+    # There's a typo in shell table name from Census
+    if (file.exists(glue("{raw_dir}/_docs/B19113%20.xls"))) {
+      file.rename(
+        glue("{raw_dir}/_docs/B19113%20.xls"),
+        glue("{raw_dir}/_docs/B19113.xls")
+      )
+    }
+
+    # For a table ID (eg. "B01001") get a vector of all table_vars (eg.
+    # "b01001_001") TODO: this doesn't work because of the B/C tables. C tables
+    # are included in the B table shells, but they aren't always in the same seq
+    # numbers. instead of this, loop over all shell tables in directory, get the
+    # table vars for them all, then load the seq/table data and inner_join
+    get_2005_table_vars <- function(table_id) {
+      if (!file.exists(glue("{raw_dir}/_docs/{table_id}.xls"))) return(NA)
+      glue("{raw_dir}/_docs/{table_id}.xls") %>%
+        readxl::read_xls() %>%
+        dplyr::filter(str_detect(`Line Number`, "^\\d+$")) %>%
+        dplyr::mutate(
+          table = stringr::str_to_lower(`Table ID`),
+          row = stringr::str_pad(`Line Number`, 3, "left", "0"),
+          table_var = stringr::str_c(table, "_", row)
+        ) %>%
+        pull(table_var)
+    }
+
+    # Need to get the seq/table correspondance from this fine, but get the
+    # table_vars from shell tables
+    vars_raw <- glue("{docs_dir}/Chapter_5_tables_summary_list.xls") %>%
+      read_excel() %>%
+      transmute(
+        table = `Table ID`,
+        seq = as.integer(`Sequence Number`)
+      ) %>%
+      filter(
+        !is.na(table),
+        # for some reason there are no data files for these seq
+        !seq %in% 139:148,
+        seq <= 150,
+        # C tables have row info inside same-numer B table .xls
+        str_detect(table, "^B"),
+        # Some random tables missing from xls files:
+        !table %in% c("B08134", "B992523")
+      ) %>%
+      transmute(
+        seq = str_pad(seq, 7, "left", "0"),
+        table_var = map(table, get_2005_table_vars)
+      ) %>%
+      unnest(table_var) %>%
+      # The table shells don't match the data files in some cases. they list more
+      # rows that are actually in the table. For example it says there are 10 rows
+      # for c02005 but there are really only 9 (confirmed on FactFinder)
+      filter(
+        !table_var %in% c("c02005_010"),
+        !stringr::str_detect(table_var, "pr")
+      ) %>%
+      group_by(seq) %>%
+      summarise(table_var = list(table_var))
+
+    seq_col_lookup <- set_names(vars_raw[["table_var"]], vars_raw[["seq"]])
+
   } else {
     vars_raw <- glue("{docs_dir}/seq_table_lookup.xls") %>%
       readxl::read_excel(col_types = "text") %>%
@@ -50,7 +110,6 @@ make_seq_col_lookup <- function(docs_dir, endyear) {
     seq_col_lookup <- split(vars_raw[["table_var"]], vars_raw[["seq"]])
   }
 
-
   readr::write_rds(seq_col_lookup, glue("{docs_dir}/seq_col_lookup.rds"))
 }
 
@@ -60,7 +119,7 @@ make_seq_col_lookup <- function(docs_dir, endyear) {
 
 get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, .sum_level) {
 
-  # TODO: once al bugs fixed, check if file exists before making
+  # TODO: once all bugs fixed, check if file exists before making
 
   # if (file.exists(glue("{data_dir}/geos_table.rds"))) {
   #
@@ -83,26 +142,23 @@ get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, .sum_leve
 
 make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
   if (span == 5L) {
-    if (endyear >= 2016) {
-      geos_table_raw <- glue("{docs_dir}/{geo_abb}.xlsx") %>%
-        readxl::read_xlsx(col_types = "text", skip = 1) %>%
+      geos_table_raw <- glue("{docs_dir}/5_year_Mini_Geo.xlsx") %>%
+        readxl::read_xlsx(sheet = geo_abb, col_types = "text") %>%
         dplyr::select(2:4) %>%
         purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
-    } else if (endyear <= 2015) {
-      geos_table_raw <- glue("{docs_dir}/{geo_abb}.xls") %>%
-        readxl::read_xls(col_types = "text", skip = 1) %>%
-        dplyr::select(2:4) %>%
-        purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
-    }
-  } else if (span == 1L) {
     if (endyear <= 2008L) {
+
+      geos_filename <- dplyr::case_when(
+        endyear == 2005L ~ glue("{data_dir}/nygeo.2005-1yr"),
+        endyear >= 2006L ~ glue("{data_dir}/g{endyear}{span}{geo_abb}.txt")
+      )
 
       # no template files in these years
       # so need to get col names and positions from sas programs
       geo_fwf_cols <- get_geo_fwf_cols(endyear)
 
       geos_table_raw <- readr::read_fwf(
-        glue("{data_dir}/g{endyear}{span}{geo_abb}.txt"),
+        geos_filename,
         col_positions = geo_fwf_cols,
         col_types = readr::cols(.default = "c")
       )
@@ -118,14 +174,11 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
       )
 
       geos_table_raw <- glue("{docs_dir}/{geos_filename}") %>%
-        readxl::read_xls(sheet = geo_abb, col_types = "text", skip = 1) %>%
+        readxl::read_xls(sheet = geo_abb, col_types = "text") %>%
         dplyr::select(1:3) %>%
         purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
+
     } else if (endyear >= 2013L) {
-      geos_filename <- dplyr::case_when(
-        endyear == 2013L ~ "1_year_Mini_Geo.xls", # actually an xlsx file, saved as ".xls"
-        endyear >= 2014L ~ "1_year_Mini_Geo.xlsx"
-      )
 
       geo_abb <- dplyr::case_when(
         endyear == 2013L ~ stringr::str_to_upper(geo_abb),
@@ -133,8 +186,8 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
         endyear >= 2015L ~ stringr::str_to_upper(geo_abb)
       )
 
-      geos_table_raw <- glue("{docs_dir}/{geos_filename}") %>%
-        readxl::read_xlsx(sheet = geo_abb, col_types = "text", skip = 1) %>%
+      geos_table_raw <- glue("{docs_dir}/1_year_Mini_Geo.xlsx") %>%
+        readxl::read_xlsx(sheet = geo_abb, col_types = "text") %>%
         dplyr::select(1:3) %>%
         purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
     }
@@ -164,7 +217,7 @@ get_geo_fwf_cols <- function(endyear) {
 
     # https://www2.census.gov/programs-surveys/acs/summary_file/2007/documentation/1_year/0sasexampleprograms/acssfgeo.sas
 
-    # are no files for 2006, so use 2005 positions
+    # are no files for 2006, so use 2007 positions
 
     readr::fwf_cols(
       logrecno = c(14, 20),

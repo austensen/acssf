@@ -38,9 +38,7 @@ download_docs <- function(docs_dir, endyear, span, geo_abb) {
     # get Seq/Table/Var info
     if (endyear >= 2006) {
       docs_file_url <- dplyr::case_when(
-        # weird problem of wrong files in FTP for 2006, found correct version in
-        # different folder
-        endyear == 2006                ~ "http://www2.census.gov/acs2006/merge_5_6_final.xls",
+        endyear == 2006                ~ glue_chr("{docs_base_url}/merge_5_6_final.xls"),
         endyear == 2007                ~ glue_chr("{docs_base_url}/{span}_year/merge_5_6_final.xls"),
         endyear == 2008                ~ glue_chr("{docs_base_url}/{span}_year/user_tools/merge_5_6.xls"),
         endyear == 2009 && span == 1L  ~ glue_chr("{docs_base_url}/{span}_year/user_tools/merge_5_6.xls"),
@@ -75,22 +73,17 @@ download_docs <- function(docs_dir, endyear, span, geo_abb) {
     }
   }
 
-
   # for recent years get geography info
   if (endyear >= 2009) {
     geos_base_url <- dplyr::case_when(
-      endyear <= 2012L              ~ glue_chr("{docs_base_url}/{span}_year/geography"),
-      endyear == 2013L && span == 5L ~ glue_chr("{docs_base_url}/geography/{span}_year_Geo"),
-      endyear >= 2014L && span == 5L ~ glue_chr("{docs_base_url}/geography/{span}yr_year_geo"),
-      endyear >= 2013L && span == 1L ~ glue_chr("{docs_base_url}/geography")
+      endyear <= 2012L ~ glue_chr("{docs_base_url}/{span}_year/geography"),
+      endyear >= 2013L ~ glue_chr("{docs_base_url}/geography")
     )
 
     geos_filename <- dplyr::case_when(
-      span == 5L && endyear <= 2015L ~ glue_chr("{geo_abb}.xls"),
-      span == 5L && endyear >= 2016L ~ glue_chr("{geo_abb}.xlsx"),
+      span == 5L                     ~ "5_year_Mini_Geo.xlsx",
       span == 1L && endyear <= 2012L ~ "Mini_Geofile.xls",
-      span == 1L && endyear == 2013L ~ "1_year_Mini_Geo.xls",
-      span == 1L && endyear >= 2014L ~ "1_year_Mini_Geo.xlsx"
+      span == 1L && endyear >= 2013L ~ "1_year_Mini_Geo.xlsx"
     )
 
     geos_url <- glue_chr("{geos_base_url}/{geos_filename}")
