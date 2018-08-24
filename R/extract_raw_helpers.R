@@ -146,6 +146,8 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
         readxl::read_xlsx(sheet = geo_abb, col_types = "text") %>%
         dplyr::select(2:4) %>%
         purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
+        
+  } else if (span == 1L) {
     if (endyear <= 2008L) {
 
       geos_filename <- dplyr::case_when(
