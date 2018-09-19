@@ -208,7 +208,6 @@ import_values <- function(seq,
     endyear >= 2006L ~ glue("{data_dir}/e{endyear}{span}{geo_abb}{seq}.txt")
   )
 
-  message(seq)
   estimates <- readr::read_csv(
       file = est_file,
       col_names = c(first_cols, seq_cols),

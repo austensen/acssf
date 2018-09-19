@@ -143,10 +143,10 @@ get_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb, .sum_leve
 make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
   if (span == 5L) {
       geos_table_raw <- glue("{docs_dir}/5_year_Mini_Geo.xlsx") %>%
-        readxl::read_xlsx(sheet = geo_abb, col_types = "text") %>%
+        readxl::read_xlsx(sheet = stringr::str_to_upper(geo_abb), col_types = "text") %>%
         dplyr::select(2:4) %>%
         purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
-        
+
   } else if (span == 1L) {
     if (endyear <= 2008L) {
 
@@ -185,12 +185,18 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
       geo_abb <- dplyr::case_when(
         endyear == 2013L ~ stringr::str_to_upper(geo_abb),
         endyear == 2014L ~ geo_abb,
-        endyear >= 2015L ~ stringr::str_to_upper(geo_abb)
+        endyear == 2015L ~ stringr::str_to_upper(geo_abb),
+        endyear >= 2016L ~ geo_abb
+      )
+
+      keep_cols <- dplyr::case_when(
+        endyear <= 2016L ~ 1:3,
+        endyear >= 2017L ~ 2:4 # added a "state" column to beginning
       )
 
       geos_table_raw <- glue("{docs_dir}/1_year_Mini_Geo.xlsx") %>%
         readxl::read_xlsx(sheet = geo_abb, col_types = "text") %>%
-        dplyr::select(1:3) %>%
+        dplyr::select(keep_cols) %>%
         purrr::set_names(c("logrecno", "geoid_full", "geo_name"))
     }
   }
