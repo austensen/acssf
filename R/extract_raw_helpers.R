@@ -186,7 +186,8 @@ make_geos_table <- function(data_dir, docs_dir, endyear, span, geo_abb) {
         endyear == 2013L ~ stringr::str_to_upper(geo_abb),
         endyear == 2014L ~ geo_abb,
         endyear == 2015L ~ stringr::str_to_upper(geo_abb),
-        endyear >= 2016L ~ geo_abb
+        endyear == 2016L ~ stringr::str_to_upper(geo_abb),
+        endyear >= 2017L ~ geo_abb
       )
 
       keep_cols <- dplyr::case_when(
