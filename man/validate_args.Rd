@@ -4,10 +4,10 @@
 \alias{validate_args}
 \title{Validate function arguments}
 \usage{
-validate_args(endyear, span, overwrite = NULL)
+validate_args(year, span, overwrite = NULL)
 }
 \arguments{
-\item{endyear}{\[`integer(1)`]: The endyear of the ACS sample. 2005 through 2016 are
+\item{year}{\[`integer(1)`]: The year of the ACS sample. 2005 through 2016 are
 available.}
 
 \item{span}{\[`integer(1)`]: The span of years for ACS estimates. ACS 1-year, and

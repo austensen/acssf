@@ -1,15 +1,15 @@
 
 
 sum_level_info <- tibble::tribble(
-  ~geo_type, ~sum_level, ~spans, ~endyears,
-  "us", "010", "1, 5", "2005-2016",
-  "cbsa", "310", "1, 5", "2005-2016",
-  "place", "160", "1, 5", "2005-2016",
-  "puma", "795", "1, 5", "2005-2016",
-  "state", "040", "1, 5", "2005-2016",
-  "county", "050", "1, 5", "2005-2016",
-  "tract", "140", "5", "2009-2016",
-  "blockgroup", "150", "5", "2009-2016"
+  ~geo_type, ~sum_level, ~spans, ~years,
+          "us", "010", c(1, 5), 2005:2017,
+        "cbsa", "310", c(1, 5), 2005:2017,
+       "place", "160", c(1, 5), 2005:2017,
+        "puma", "795", c(1, 5), 2005:2017,
+       "state", "040", c(1, 5), 2005:2017,
+      "county", "050", c(1, 5), 2005:2017,
+       "tract", "140", 5L,      2009:2017,
+  "blockgroup", "150", 5L,      2009:2017
 )
 
 devtools::use_data(sum_level_info, overwrite = TRUE)

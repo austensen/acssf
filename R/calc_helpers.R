@@ -68,14 +68,9 @@ pad_transformer <- function(code, envir) {
 #'
 #' @export
 acs_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
-  list(...) %>%
-    purrr::map(acs_vars) %>%
-    purrr::flatten_chr() %>%
-    purrr::map(~rlang::eval_tidy(rlang::sym(.x), env = .envir)) %>%
-    as.data.frame() %>%
-    rowSums(na.rm = na.rm)
+  df <- acs_vars_to_df(..., .envir = .envir)
+  rowSums(df, na.rm = na.rm)
 }
-
 
 #' Drop ACS variable columns from dataframe
 #'
@@ -96,7 +91,7 @@ acs_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
 #' library(dplyr)
 #'
 #' df <- tibble(
-#'   endyear = 2009L,
+#'   year = 2009L,
 #'   span = 1L,
 #'   b25070_e001 = c(1, 2, 3),
 #'   b25070_m001 = c(0.2, 0.5, 0.7),
@@ -104,37 +99,97 @@ acs_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
 #'   b25070_m002 = c(0.1, NA, 0.4)
 #' )
 #'
-#' acs_drop_estimates(df)
+#' acs_drop_vars(df, "estimates")
 #'
-#' acs_drop_margins(df)
+#' acs_drop_vars(df, "margins")
 #'
 #' df %>%
-#'   acs_drop_margins() %>%
 #'   mutate(foo = acs_sum("b25070_e{1:2*}")) %>%
-#'   acs_drop_estimates()
+#'   acs_drop_vars("both")
 #'
 #' @name acs_drop
 #' @export
-acs_drop_estimates <- function(df) {
-  dplyr::select(df, -dplyr::matches("[bc]\\d{5}[a-z]*_e\\d{3}"))
+acs_drop_vars <- function(.data, type = c("all", "estimates", "margins", "standard errors")) {
+  type <- match.arg(type)
+  type_pat <- switch(
+    type,
+    "all" = "([em]|(se))",
+    "estimates" = "e",
+    "margins" = "m",
+    "standard errors" = "se"
+  )
+  dplyr::select(.data, -dplyr::matches(glue("[bc]\\d{{5}}[a-z]*_{type_pat}\\d{{3}}")))
 }
 
-#' @export
-#' @rdname acs_drop
-acs_drop_margins <- function(df) {
-  dplyr::select(df, -dplyr::matches("[bc]\\d{5}[a-z]*_m\\d{3}"))
+
+acs_margin_to_se <- function(.data, level = 0.90) {
+  if (level <= 0 || level >= 1) stop_glue("level must be betwen 0 and 1")
+
+  z_score <- qnorm((1.0-level)/2, lower.tail = F)
+  z_score_90 <- qnorm((1.0-0.95)/2, lower.tail = F)
+
+  .data %>%
+    dplyr::mutate_at(
+      dplyr::maches("[bc]\\d{5}[a-z]*_m\\d{3}"),
+      dplyr::funs(z_score * (. / z_score_90))
+    ) %>%
+    dplyr::rename_at(
+      dplyr::maches("[bc]\\d{5}[a-z]*_m\\d{3}"),
+      dplyr::funs(stringr::str_replace(., "_m", "_se"))
+    )
 }
 
 
-# TODO: document, and make _all_cols_ consistent with _vars_table_ from
-# acs_extract_raw()
-add_na_cols <- function(df, all_cols) {
-  new_cols <- purrr::discard(all_cols, ~.x %in% names(df))
 
-  new_cols_df <- new_cols %>%
-    purrr::map(~rep(NA_real_, nrow(df))) %>%
-    purrr::set_names(new_cols) %>%
-    tibble::as_tibble()
+# Standard Error of Calculated Indicator Functions
+#################################
 
-  dplyr::bind_cols(df, new_cols_df)
+# TODO: Test these further then document and export
+
+# Sum or Difference of Estimates
+acs_se_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
+  df <- acs_vars_to_df(..., .envir = .envir)
+
+  df %>%
+    dplyr::mutate_all(dplyr::funs(.^2)) %>%
+    rowSums(na.rm = na.rm) %>%
+    sqrt(.) # raises "note" if input piped in without the dot
+}
+
+# Proportions
+acs_se_prop <- function(num, num_se, denom, denom_se) {
+  purrr::pmap_dbl(list(num, num_se, denom, denom_se), se_prop)
+}
+
+se_prop <- function(num, num_se, denom, denom_se) {
+  p <- num / denom
+
+  if (p == 1) {
+    num_se / denom
+  } else if (p < 0) {
+    (1 / denom) * sqrt(num_se^2 + p^2 * denom_se^2)
+  } else {
+    (1 / denom) * sqrt(num_se^2 - p^2 * denom_se^2)
+  }
+}
+
+# Means and Other Ratios
+acs_se_ratio <- function(num, num_se, denom, denom_se) {
+  p <- num / denom
+  (1 / denom) * sqrt(num_se^2 + p^2 * denom_se^2)
+}
+
+# Products
+acs_se_prod <- function (val_1, se_1, val_2, se_2) {
+  sqrt(val_1 * se_2^2 + val_2 * se_1^2)
+}
+
+
+
+acs_vars_to_df <- function(..., .envir = parent.frame()) {
+  list(...) %>%
+    purrr::map(acs_vars) %>%
+    purrr::flatten_chr() %>%
+    purrr::map(~rlang::eval_tidy(rlang::sym(.x), env = .envir)) %>%
+    as.data.frame()
 }

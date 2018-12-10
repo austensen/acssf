@@ -4,7 +4,7 @@
 #' data from the Census Bureau's FTP site.
 #'
 #' @param acs_dir \[`character(1)`]: The root directory in which all the ACS SF data will be saved.
-#' @param endyear \[`integer(1)`]: The endyear of the ACS sample. 2005 through 2016 are
+#' @param year \[`integer(1)`]: The year of the ACS sample. 2005 through 2016 are
 #'   available.
 #' @param span \[`integer(1)`]: The span of years for ACS estimates. ACS 1-year, and
 #'   5-year surveys are supported.
@@ -15,59 +15,215 @@
 #'
 #' @export
 
-acs_download <- function(acs_dir, endyear, span, geo, overwrite = FALSE) {
+acs_download <- function(year, span, geo, acs_dir = ".", overwrite = FALSE) {
 
   # TODO: add support for taking vector of geos
-  # TODO: when package ready, consider switch to https://github.com/ropensci/ftp
-  # TODO: add messages for steps in process (too many separate processes for bar)
-
-  dir.create(acs_dir, recursive = TRUE, showWarnings = FALSE)
+  # TODO: add progress bar (first time for 5yr in big state takes forever)
 
   validate_args(
-    endyear = endyear,
+    year = year,
     span = span,
     overwrite = overwrite
   )
 
-  geo_abb <- swap_geo_id(geo, "abb")
-  geo_name <- swap_geo_id(geo_abb, "name")
+  geo_abb <- swap_geo_id(geo, span, "abb")
+  geo_name <- swap_geo_id(geo_abb, span, "name")
 
-  # capitalize "of" in 5-yr data
-  if (span == 5L && geo_abb == "dc") {
-    geo_name <- "DistrictOfColumbia"
-  }
-
-  raw_dir <- glue("{acs_dir}/Raw/{endyear}_{span}")
-
-  dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
+  docs_dir <- glue("{acs_dir}/Raw/{year}_{span}/_docs")
+  data_dir <- glue("{acs_dir}/Raw/{year}_{span}/{geo_name}")
 
   if (overwrite) {
-    unlink(glue("{raw_dir}/_docs"), recursive = TRUE)
-    unlink(glue("{raw_dir}/{geo_name}"), recursive = TRUE)
-  } else if (file.exists(glue("{raw_dir}/{geo_name}"))) {
-    warn_glue("{endyear} {span}-year data for {geo_name} already exists.")
+    fs::dir_delete(c(docs_dir, data_dir))
+  } else if (fs::file_exists(data_dir)) {
+    warn_glue("{year} {span}-year data for {geo_name} already exists.")
     return(invisible(NULL))
   }
-
 
   # some downloads take a long time, temporarily change timeout (10min)
   op <- options(timeout = 600L)
   on.exit(options(op))
 
-  download_docs(
-    docs_dir = glue("{raw_dir}/_docs"),
-    endyear = endyear,
-    span = span,
-    geo_abb = geo_abb
-  )
+  download_docs(docs_dir, year, span)
+  download_data(data_dir, year, span, geo_name)
 
-  download_data(
-    data_dir = glue("{raw_dir}/{geo_name}"),
-    endyear = endyear,
-    span = span,
-    geo_name = geo_name
-  )
+  data_dir %>%
+    fs::dir_ls(regexp = ".*\\.zip$", recursive = TRUE) %>%
+    fs::file_delete()
+}
 
-  zip_files <- dir(raw_dir, pattern = "\\.zip$", recursive = TRUE, full.names = TRUE)
-  if (length(zip_files)) invisible(file.remove(zip_files))
+# TODO: write bare-bones documentation for helper functions
+
+# Downloads Seq/Table/Var Info
+download_docs <- function(docs_dir, year, span) {
+
+  # Only one set of docs per year/span
+  if (fs::dir_exists(docs_dir)) {
+    # Don't want to warn because it would come up for every state data is downloaded for
+    return(invisible(NULL))
+  }
+
+  fs::dir_create(docs_dir)
+
+  base_url <- glue("ftp://ftp.census.gov/programs-surveys/acs/summary_file/{year}/documentation")
+
+  # get Seq/Table/Var info
+  if (year >= 2006) {
+    docs_file_url <- dplyr::case_when(
+      year == 2006                ~ glue_chr("{base_url}/merge_5_6_final.xls"),
+      year == 2007                ~ glue_chr("{base_url}/{span}_year/merge_5_6_final.xls"),
+      year == 2008                ~ glue_chr("{base_url}/{span}_year/user_tools/merge_5_6.xls"),
+      year == 2009 && span == 1L  ~ glue_chr("{base_url}/{span}_year/user_tools/merge_5_6.xls"),
+      year == 2009 && span == 5L  ~ glue_chr("{base_url}/{span}_year/user_tools/Sequence_Number_and_Table_Number_Lookup.xls"),
+      year %in% 2010:2012         ~ glue_chr("{base_url}/{span}_year/user_tools/Sequence_Number_and_Table_Number_Lookup.xls"),
+      year >= 2013                ~ glue_chr("{base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.xls")
+    )
+
+    # standardize when saving local copy for easier lookup later
+    docs_file <- glue("{docs_dir}/seq_table_lookup.xls")
+
+    download_files(docs_file_url, docs_file, mode = "wb")
+  } else if (year == 2005) {
+
+    # seq/table info
+    seq_filename <- "Chapter_5_tables_summary_list.xls"
+
+    seq_url <- glue("{base_url}/{seq_filename}")
+    seq_file <- glue("{docs_dir}/{seq_filename}")
+
+    download_files(seq_url, seq_file, mode = "wb")
+
+
+    # also need table shells to build for table/vars
+    shell_base_url <- "ftp://ftp.census.gov/programs-surveys/acs/tech_docs/table_shells/2005"
+    shell_filenames <- get_filenames(shell_base_url, "\\.xls$")
+
+    shell_urls <- glue("{shell_base_url}/{shell_filenames}")
+    shell_files <- glue("{docs_dir}/{shell_filenames}")
+
+    download_files(shell_urls, shell_files)
+  }
+
+  # for recent years get geography info
+  if (year >= 2009) {
+    geos_base_url <- dplyr::case_when(
+      year <= 2012L ~ glue_chr("{base_url}/{span}_year/geography"),
+      year >= 2013L ~ glue_chr("{base_url}/geography")
+    )
+
+    geos_filename <- dplyr::case_when(
+      span == 5L                     ~ "5_year_Mini_Geo.xlsx",
+      span == 1L && year <= 2012L ~ "Mini_Geofile.xls",
+      span == 1L && year >= 2013L ~ "1_year_Mini_Geo.xlsx"
+    )
+
+    geos_url <- glue_chr("{geos_base_url}/{geos_filename}")
+
+    geos_file <- glue_chr("{docs_dir}/{geos_filename}")
+
+    # TODO: don't download if already there (wait until all bugs worked out)
+    download_files(geos_url, geos_file)
+  }
+}
+
+
+# Downloads Geography and Data Tables
+
+download_data <- function(data_dir, year, span, geo_name) {
+
+  # TODO: warn if no files are found on FTP (census error)
+
+  if (fs::dir_exists(data_dir)) {
+    warn_glue("The following directory already exists, skipping download\n{data_dir}")
+    return(invisible(NULL))
+  }
+
+  fs::dir_create(data_dir)
+
+  base_url <- glue("ftp://ftp.census.gov/programs-surveys/acs/summary_file/{year}")
+
+  if (year >= 2009) {
+    if (span == 1L) {
+      data_filenames <- dplyr::case_when(
+        year == 2009 ~ glue_chr("{geo_name}.zip"),
+        year > 2009  ~ glue_chr("{geo_name}_All_Geographies.zip")
+      )
+
+      data_files <- glue("{data_dir}/{data_filenames}")
+
+      data_urls <- glue("{base_url}/data/{span}_year_by_state/{data_filenames}")
+
+      download_files(data_urls, data_files)
+
+    } else if (span == 5L) {
+      data_dir_non_tract <- glue("{data_dir}/non_tract_blockgroup")
+      data_dir_tract <- glue("{data_dir}/tract_blockgroup")
+
+      fs::dir_create(c(data_dir_non_tract, data_dir_tract))
+
+      data_filenames <- c(
+        glue("{geo_name}_All_Geographies_Not_Tracts_Block_Groups.zip"),
+        glue("{geo_name}_Tracts_Block_Groups_Only.zip")
+      )
+
+      data_files <- c(
+        glue("{data_dir_non_tract}/{data_filenames[[1]]}"),
+        glue("{data_dir_tract}/{data_filenames[[2]]}")
+      )
+
+      data_urls <- glue("{base_url}/data/{span}_year_by_state/{data_filenames}")
+
+      download_files(data_urls, data_files)
+    }
+  } else if (year <= 2008) {
+
+    # get data files (including geographies)
+
+    data_base_url <- dplyr::case_when(
+      year == 2005 & geo_name == "UnitedStates" ~ glue_chr("{base_url}/data/0UnitedStates"),
+      year %in% 2005:2006                       ~ glue_chr("{base_url}/data/{geo_name}"),
+      year %in% 2007:2008                       ~ glue_chr("{base_url}/data/{span}_year/{geo_name}")
+    )
+
+    data_file_pattern <- dplyr::case_when(
+      year %in% 2005      ~ "\\.2005-1yr",
+      year %in% 2006:2008 ~ glue_chr("{year}{span}")
+    )
+
+    data_filenames <- get_filenames(data_base_url, data_file_pattern)
+
+    data_urls <- glue("{data_base_url}/{data_filenames}")
+    data_files <- glue("{data_dir}/{data_filenames}")
+
+    download_files(data_urls, data_files)
+  }
+
+  # Unzip all .zip files into their existing folder, then delete .zip files
+  zip_files <- fs::dir_ls(data_dir, regexp = ".*\\.zip$", recursive = TRUE)
+  unzip_in_place(zip_files)
+  fs::file_delete(zip_files)
+}
+
+# Get all files matching pattern from a ACS FTP page
+get_filenames <- function(url, pattern = ".*") {
+  hand <- curl::new_handle()
+  curl::handle_setopt(hand, dirlistonly = TRUE)
+
+  url %>%
+    stringr::str_c("/") %>%
+    curl::curl_fetch_memory(handle = hand) %>%
+    .[["content"]] %>%
+    rawToChar() %>%
+    stringr::str_split("\\n") %>%
+    .[[1]] %>%
+    stringr::str_subset(pattern)
+}
+
+unzip_in_place <- function(path) {
+  purrr::walk(path, function(path) {
+    utils::unzip(path, exdir = fs::path_dir(path), junkpaths = TRUE)
+  })
+}
+
+download_files <- function(urls, destfiles, ...) {
+  purrr::walk2(urls, destfiles, curl::curl_download, ...)
 }

@@ -1,15 +1,13 @@
-## swap_geo_id was addapted from tidycensus "validate_state"
-## https://github.com/walkerke/tidycensus/blob/12b18d230ba1768f92056919fbab341f3ff63ceb/R/utils.R
-
 #' Return desired geography variable from FIPS or abbreviation
 #'
-#' @param geo character or numberic, state FIPS code or state (or US) abreviation
-#' @param id character, type of geogrphy ID to return ("name", "abb", or "fips")
+#' @inheritParams acs_download
+#' @param type  \[`character(1)`]: type of geogrphy ID to return ("name", "abb", or "fips")
 #'
 #' @return Character(1) of either geography name, abbreviation, or FIPS code.
 #'
+swap_geo_id <- function(geo, span, type = c("name", "abb", "fips")) {
+  type <- match.arg(type)
 
-swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
   geo <- geo %>% stringr::str_trim() %>% stringr::str_to_lower()
 
   if (geo %in% c("as", "60", "gu", "66", "vi", "78")) {
@@ -22,27 +20,67 @@ swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
     if (geo %in% fips_abb_name_table[["fips"]]) {
       ret <- fips_abb_name_table %>%
         dplyr::filter(fips == geo) %>%
-        dplyr::pull(id)
-
-      return(ret)
+        dplyr::pull(type)
     }
   } else if (stringr::str_detect(geo, "^[[:alpha:]]+")) {
     if (nchar(geo) == 2 && geo %in% fips_abb_name_table[["abb"]]) {
       ret <- fips_abb_name_table %>%
         dplyr::filter(abb == geo) %>%
-        dplyr::pull(id)
-
-      return(ret)
+        dplyr::pull(type)
     }
+  } else {
+    stop_glue("{geo} is not a valid FIPS code or abbreviation.")
   }
-  stop_glue("{geo} is not a valid FIPS code or abbreviation.")
+
+  # capitalize "of" in 5-yr data
+  if (span == 5L && ret == "dc") {
+    ret <- "DistrictOfColumbia"
+  }
+
+  ret
+}
+
+#' Return desired geography type variable from sum level code or name
+#'
+#' @param geo \[`character(1)`]: census sum level code or geography type name
+#'   (eg. `"140"` or `"tract"`). For supported values see [`sum_level_info`]
+#' @param type \[`character(1)`]: type of geogrphy ID to return ("name", "abb",
+#'   or "fips")
+#'
+#' @return Character(1) of either geography name, abbreviation, or FIPS code.
+#'
+swap_geo_type <- function(geo, span, type = c("sum_level", "geo_type")) {
+  type <- match.arg(type)
+
+  geo <- geo %>% stringr::str_trim() %>% stringr::str_to_lower()
+  geo <- dplyr::if_else(stringr::str_detect(geo, "^[[:digit:]]+$"), stringr::str_pad(geo, 3, "left", "0"), geo)
+
+  ret <- sum_level_info %>%
+    dplyr::filter(sum_level %in% geo | geo_type %in% geo) %>%
+    dplyr::pull(type)
+
+  if (length(ret) != length(geo)) {
+    sum_level_info %>%
+      dplyr::select(sum_level, geo_type) %>%
+      capture.output() %>%
+      paste(collapse = "\n") %>%
+      message()
+    stop_glue("`geo` must be one of the above sum_level or geo_type values")
+  }
+
+  geos_5yr <- c("tract", "blockgroup", "140", "150")
+  if (length(dplyr::intersect(geos_5yr, ret)) && span != 5L) {
+    stop_glue("tract and blockgroup dta only available in 5-year data")
+  }
+
+  ret
 }
 
 
 
 #' Validate function arguments
 #'
-#' @param endyear \[`integer(1)`]: The endyear of the ACS sample. 2005 through 2016 are
+#' @param year \[`integer(1)`]: The year of the ACS sample. 2005 through 2016 are
 #'   available.
 #' @param span \[`integer(1)`]: The span of years for ACS estimates. ACS 1-year, and
 #'   5-year surveys are supported.
@@ -51,11 +89,10 @@ swap_geo_id <- function(geo, id = c("name", "abb", "fips")) {
 #'
 #' @return None
 #'
-
-validate_args <- function(endyear, span, overwrite = NULL) {
-  endyear <- as.integer(endyear)
-  if (is.na(endyear)) {
-    stop_glue("`endyear` must be an integer.")
+validate_args <- function(year, span, overwrite = NULL) {
+  year <- as.integer(year)
+  if (is.na(year)) {
+    stop_glue("`year` must be an integer.")
   }
 
   span <- as.integer(span)
@@ -63,15 +100,15 @@ validate_args <- function(endyear, span, overwrite = NULL) {
     stop_glue("`span` must be an integer.")
   }
 
-  if (endyear < 2005) {
+  if (year < 2005) {
     stop_glue("ACS is only available from 2005 onwards.")
   }
 
-  if (endyear %in% 2005:2006 && span != 1L) {
-    stop_glue("For {endyear} only 1-year data is available.")
-  } else if (endyear %in% 2007:2008 & span == 5L) {
-    stop_glue("For {endyear} only 1- and 3-year data is available.")
-  } else if (endyear >= 2014L && span == 3L) {
+  if (year %in% 2005:2006 && span != 1L) {
+    stop_glue("For {year} only 1-year data is available.")
+  } else if (year %in% 2007:2008 && span == 5L) {
+    stop_glue("For {year} only 1- and 3-year data is available.")
+  } else if (year >= 2014L && span == 3L) {
     stop_glue("From 2014 onward 3-year data is no longer available.")
   }
 

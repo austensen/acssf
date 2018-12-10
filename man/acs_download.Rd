@@ -4,12 +4,10 @@
 \alias{acs_download}
 \title{Download ACS Summary File Data}
 \usage{
-acs_download(acs_dir, endyear, span, geo, overwrite = FALSE)
+acs_download(year, span, geo, acs_dir = ".", overwrite = FALSE)
 }
 \arguments{
-\item{acs_dir}{\[`character(1)`]: The root directory in which all the ACS SF data will be saved.}
-
-\item{endyear}{\[`integer(1)`]: The endyear of the ACS sample. 2005 through 2016 are
+\item{year}{\[`integer(1)`]: The year of the ACS sample. 2005 through 2016 are
 available.}
 
 \item{span}{\[`integer(1)`]: The span of years for ACS estimates. ACS 1-year, and
@@ -17,6 +15,8 @@ available.}
 
 \item{geo}{\[`character(1)`]: The 2-letter abbreviation for the state for which data will be
 downloaded. For geogrpahies that do not nest within states, use `"US"`.}
+
+\item{acs_dir}{\[`character(1)`]: The root directory in which all the ACS SF data will be saved.}
 
 \item{overwrite}{\[`logical(1)`]:  Whether existing versions of these files be overwriten.
 Defaults to `FALSE`.}

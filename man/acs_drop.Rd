@@ -2,13 +2,11 @@
 % Please edit documentation in R/calc_helpers.R
 \name{acs_drop}
 \alias{acs_drop}
-\alias{acs_drop_estimates}
-\alias{acs_drop_margins}
+\alias{acs_drop_vars}
 \title{Drop ACS variable columns from dataframe}
 \usage{
-acs_drop_estimates(df)
-
-acs_drop_margins(df)
+acs_drop_vars(.data, type = c("all", "estimates", "margins",
+  "standard errors"))
 }
 \arguments{
 \item{df}{\[`data.frame`]: A data.frame with ACS variable columns using the
@@ -30,7 +28,7 @@ This function simply wraps the `dplyr` expression `select(df,
 library(dplyr)
 
 df <- tibble(
-  endyear = 2009L,
+  year = 2009L,
   span = 1L,
   b25070_e001 = c(1, 2, 3),
   b25070_m001 = c(0.2, 0.5, 0.7),
@@ -38,13 +36,12 @@ df <- tibble(
   b25070_m002 = c(0.1, NA, 0.4)
 )
 
-acs_drop_estimates(df)
+acs_drop_vars(df, "estimates")
 
-acs_drop_margins(df)
+acs_drop_vars(df, "margins")
 
 df \%>\%
-  acs_drop_margins() \%>\%
   mutate(foo = acs_sum("b25070_e{1:2*}")) \%>\%
-  acs_drop_estimates()
+  acs_drop_vars("both")
 
 }
