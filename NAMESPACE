@@ -2,6 +2,7 @@
 
 export(acs_download)
 export(acs_drop_vars)
+export(acs_load)
 export(acs_sum)
 export(acs_transform)
 export(acs_vars)

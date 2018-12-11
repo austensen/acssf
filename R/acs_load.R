@@ -1,4 +1,14 @@
-acs_load <- function(conn, table_name, acs_dir) {
+#' Load all files created by acs_transform() into database table
+#'
+#' @param conn A [DBI::DBIConnection-class] object, as returned by
+#'   [DBI::dbConnect()].
+#' @param table_name A character string specifying the unquoted database table name.
+#' @param acs_dir The root directory in which all the ACS
+#'   data has been downloaded with [acs_download()]. Defaults to current working directory.
+#'
+#' @export
+#'
+acs_load <- function(conn, table_name, acs_dir =".") {
 
   # TODO: maybe add check that all files have the same schema before loading
 

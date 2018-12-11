@@ -16,7 +16,7 @@ available.}
 \item{geo}{\[`character(1)`]: The 2-letter abbreviation for the state for which data will be
 downloaded. For geogrpahies that do not nest within states, use `"US"`.}
 
-\item{acs_dir}{\[`character(1)`]: The root directory in which all the ACS SF data will be saved.}
+\item{acs_dir}{\[`character(1)`]: The root directory in which all the ACS SF data will be saved. Defaluts to current working directoy.}
 
 \item{overwrite}{\[`logical(1)`]:  Whether existing versions of these files be overwriten.
 Defaults to `FALSE`.}

@@ -3,8 +3,6 @@
 #' This function parses the data downloded by [acs_download()] and creates a csv
 #' file for the selected parameters.
 #'
-#' @param acs_dir \[`character(1)`]: The root directory in which all the ACS
-#'   data has been downloaded with [acs_download()].
 #' @param year \[integer(1)]: The year of the desired ACS sample. For
 #'   example, use 2010 for the 2010 1-year ACS or the 2006-2010 5-yer ACS.
 #' @param span \[integer(1)]: The span of years for ACS estimates. ACS contains
@@ -17,6 +15,8 @@
 #'   see <https://factfinder.census.gov/help/en/summary_level_code_list.htm>.
 #' @param keep_vars \[`character`]: A character vector of ACS variable codes to
 #'   be included in the output table, using the format `"b25003_001"`.
+#' @param acs_dir \[`character(1)`]: The root directory in which all the ACS
+#'   data has been downloaded with [acs_download()]. Defaults to current working directory.
 #' @param .f A function or formula to be passed to [`purrr::as_mapper()`]. The
 #'   function must take a single dataframe as the only argument, and return a
 #'   single dataframe.

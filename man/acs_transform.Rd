@@ -26,7 +26,7 @@ see <https://factfinder.census.gov/help/en/summary_level_code_list.htm>.}
 be included in the output table, using the format `"b25003_001"`.}
 
 \item{acs_dir}{\[`character(1)`]: The root directory in which all the ACS
-data has been downloaded with [acs_download()].}
+data has been downloaded with [acs_download()]. Defaults to current working directory.}
 
 \item{.f}{A function or formula to be passed to [`purrr::as_mapper()`]. The
   function must take a single dataframe as the only argument, and return a
