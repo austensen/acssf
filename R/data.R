@@ -1,7 +1,7 @@
 
 #' Summary levels and ACS surveys
 #'
-#' A dataset containing the summary levels supported by [acs_extract_raw()] and the ACS surveys for which they are available.
+#' A dataset containing the summary levels supported by [acs_transform()] and the ACS surveys for which they are available.
 #'
 #' @format A data frame with 8 rows and 4 variables:
 #' * geo_type: Geography type

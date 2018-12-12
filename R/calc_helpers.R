@@ -75,7 +75,7 @@ acs_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
 #' Drop ACS variable columns from dataframe
 #'
 #' Simple wrapper of [dplyr::select()] to drop ACS variable columns (estimates
-#' or margins) created by [acssf::make_raw_table()].
+#' or margins) created by [acs_transform()].
 #'
 #' @param df \[`data.frame`]: A data.frame with ACS variable columns using the
 #'   format created by [acs_make_table()]: `b25002_e001` for estimates and
