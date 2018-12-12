@@ -9,7 +9,7 @@
 #' * spans: ACS survey spans avaiable (1-year, 5-year)
 #' * years: Years of ACS surveys available (for 5-year surveys last year of span)
 #'
-#' @source \url{https://www2.census.gov/acs2011_1yr/summaryfile/ACS_2011_SF_Tech_Doc.pdf}
+#' @source <https://www2.census.gov/acs2011_1yr/summaryfile/ACS_2011_SF_Tech_Doc.pdf>
 "sum_level_info"
 
 #' US State (plus DC and PR) Abbreviations and FIPS codes
@@ -23,5 +23,5 @@
 #' * fips: Fips State Numeric Code
 #' * name: State Name (format used for FTP download files)
 #'
-#' @source \url{https://www.census.gov/geo/reference/ansi_statetables.html}
+#' @source <https://www.census.gov/geo/reference/ansi_statetables.html>
 "fips_abb_name_table"

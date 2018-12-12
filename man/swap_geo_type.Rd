@@ -7,10 +7,10 @@
 swap_geo_type(geo, span, type = c("sum_level", "geo_type"))
 }
 \arguments{
-\item{geo}{\[`character(1)`]: census sum level code or geography type name
-(eg. `"140"` or `"tract"`). For supported values see [`sum_level_info`]}
+\item{geo}{[\code{character(1)}]: census sum level code or geography type name
+(eg. \code{"140"} or \code{"tract"}). For supported values see \code{\link{sum_level_info}}}
 
-\item{type}{\[`character(1)`]: type of geogrphy ID to return ("name", "abb",
+\item{type}{[\code{character(1)}]: type of geogrphy ID to return ("name", "abb",
 or "fips")}
 }
 \value{

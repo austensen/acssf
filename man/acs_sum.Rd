@@ -2,25 +2,25 @@
 % Please edit documentation in R/calc_helpers.R
 \name{acs_sum}
 \alias{acs_sum}
-\title{Sum rows within mutate with [acs_vars()]}
+\title{Sum rows within mutate with \code{\link[=acs_vars]{acs_vars()}}}
 \usage{
 acs_sum(..., na.rm = TRUE, .envir = parent.frame())
 }
 \arguments{
-\item{...}{\[`expressions`]: Expressions string(s) to format into ACS
-variable codes with [acs_vars()] or strings corresponding to column names.
+\item{...}{[\code{expressions}]: Expressions string(s) to format into ACS
+variable codes with \code{\link[=acs_vars]{acs_vars()}} or strings corresponding to column names.
 are concatenated together before formatting.}
 
-\item{na.rm}{\[`logical: TRUE`]: A logical value indicating whether NA values
+\item{na.rm}{[\code{logical: TRUE}]: A logical value indicating whether NA values
 should be stripped before the computation proceeds.}
 
-\item{.envir}{\[`environment: parent.frame()`]: Environment to evaluate each
+\item{.envir}{[\code{environment: parent.frame()}]: Environment to evaluate each
 expression in. Expressions are evaluated from left to right. If .x is an
 environment, the expressions are evaluated in that environment and .envir
 is ignored.}
 }
 \description{
-Sum across rows within a [dplyr::mutate()] call using [acs_vars()] syntax to
+Sum across rows within a \code{\link[dplyr:mutate]{dplyr::mutate()}} call using \code{\link[=acs_vars]{acs_vars()}} syntax to
 express column inputs as expression strings.
 }
 \examples{
@@ -42,5 +42,5 @@ df \%>\%
 
 }
 \seealso{
-[acs_vars()]
+\code{\link[=acs_vars]{acs_vars()}}
 }

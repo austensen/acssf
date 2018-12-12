@@ -9,19 +9,18 @@ acs_drop_vars(.data, type = c("all", "estimates", "margins",
   "standard errors"))
 }
 \arguments{
-\item{df}{\[`data.frame`]: A data.frame with ACS variable columns using the
-format created by [acs_make_table()]: `b25002_e001` for estimates and
-`b25002_m001` for margins.}
+\item{df}{[\code{data.frame}]: A data.frame with ACS variable columns using the
+format created by \code{\link[=acs_make_table]{acs_make_table()}}: \code{b25002_e001} for estimates and
+\code{b25002_m001} for margins.}
 }
 \description{
-Simple wrapper of [dplyr::select()] to drop ACS variable columns (estimates
-or margins) created by [acssf::make_raw_table()].
+Simple wrapper of \code{\link[dplyr:select]{dplyr::select()}} to drop ACS variable columns (estimates
+or margins) created by \code{\link[acssf:make_raw_table]{acssf::make_raw_table()}}.
 }
 \details{
-This function simply wraps the `dplyr` expression `select(df,
-  -maches("pattern"))`, where the regular expression is
-  `"[bc]\\d{5}[a-z]*_e\\d{3}"` for estiamtes and `"[bc]\\d{5}[a-z]*_m\\d{3}"`
-  for margins.
+This function simply wraps the \code{dplyr} expression \code{select(df, -maches("pattern"))}, where the regular expression is
+\code{"[bc]\\d{5}[a-z]*_e\\d{3}"} for estiamtes and \code{"[bc]\\d{5}[a-z]*_m\\d{3}"}
+for margins.
 }
 \examples{
 

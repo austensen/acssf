@@ -64,8 +64,8 @@ acs_transform <- function(year, span, geo, sum_levels, keep_vars, acs_dir = ".",
   # state_5_sumlevel
   # us_5_sumlevels
 
-  sum_levels <- swap_geo_type(sum_levels, "sum_level")
-  geo_types <- swap_geo_type(sum_levels, "geo_type")
+  sum_levels <- swap_geo_type(sum_levels, span, "sum_level")
+  geo_types <- swap_geo_type(sum_levels, span, "geo_type")
 
 
   geo_abb <- swap_geo_id(geo, span, "abb")
@@ -134,8 +134,8 @@ acs_transform <- function(year, span, geo, sum_levels, keep_vars, acs_dir = ".",
   first_cols <- c("year", "span", "sum_level", "geoid_full", "geoid", "geo_name")
   acs_var_pat <- "[bc]\\d{5}[a-z]*_[em]\\d{3}"
   keep_acs_vars <- c(
-    stringr::str_replace(keep_acs_vars, "_", "_e"),
-    stringr::str_replace(keep_acs_vars, "_", "_m")
+    stringr::str_replace(keep_vars, "_", "_e"),
+    stringr::str_replace(keep_vars, "_", "_m")
   )
 
   values %>%

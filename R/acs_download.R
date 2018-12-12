@@ -62,7 +62,7 @@ download_docs <- function(docs_dir, year, span) {
     return(invisible(NULL))
   }
 
-  fs::dir_create(docs_dir)
+  fs::dir_create(docs_dir, recursive = TRUE)
 
   base_url <- glue("ftp://ftp.census.gov/programs-surveys/acs/summary_file/{year}/documentation")
 
@@ -137,7 +137,7 @@ download_data <- function(data_dir, year, span, geo_name) {
     return(invisible(NULL))
   }
 
-  fs::dir_create(data_dir)
+  fs::dir_create(data_dir, recursive = TRUE)
 
   base_url <- glue("ftp://ftp.census.gov/programs-surveys/acs/summary_file/{year}")
 

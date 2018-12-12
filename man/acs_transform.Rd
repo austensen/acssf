@@ -8,41 +8,42 @@ acs_transform(year, span, geo, sum_levels, keep_vars, acs_dir = ".",
   .f = NULL)
 }
 \arguments{
-\item{year}{\[integer(1)]: The year of the desired ACS sample. For
+\item{year}{[integer(1)]: The year of the desired ACS sample. For
 example, use 2010 for the 2010 1-year ACS or the 2006-2010 5-yer ACS.}
 
-\item{span}{\[integer(1)]: The span of years for ACS estimates. ACS contains
+\item{span}{[integer(1)]: The span of years for ACS estimates. ACS contains
 1-, 3-, and 5-year surveys.}
 
-\item{geo}{\[`charater(1)`]: The 2-letter state abbreviation or 2-digit FIPS
+\item{geo}{[\code{charater(1)}]: The 2-letter state abbreviation or 2-digit FIPS
 code for the state for which data will be downloaded. For geogrpahies that
-do not nest within states, use `"us"`.}
+do not nest within states, use \code{"us"}.}
 
-\item{sum_levels}{\[`character`]: The Census Bureau codes for the summary
+\item{sum_levels}{[\code{character}]: The Census Bureau codes for the summary
 level to include in the table. (eg. "010" = United States) For full list
-see <https://factfinder.census.gov/help/en/summary_level_code_list.htm>.}
+see \url{https://factfinder.census.gov/help/en/summary_level_code_list.htm}.}
 
-\item{keep_vars}{\[`character`]: A character vector of ACS variable codes to
-be included in the output table, using the format `"b25003_001"`.}
+\item{keep_vars}{[\code{character}]: A character vector of ACS variable codes to
+be included in the output table, using the format \code{"b25003_001"}.}
 
-\item{acs_dir}{\[`character(1)`]: The root directory in which all the ACS
-data has been downloaded with [acs_download()]. Defaults to current working directory.}
+\item{acs_dir}{[\code{character(1)}]: The root directory in which all the ACS
+data has been downloaded with \code{\link[=acs_download]{acs_download()}}. Defaults to current working directory.}
 
-\item{.f}{A function or formula to be passed to [`purrr::as_mapper()`]. The
-  function must take a single dataframe as the only argument, and return a
-  single dataframe.
+\item{.f}{A function or formula to be passed to \code{\link[purrr:as_mapper]{purrr::as_mapper()}}. The
+function must take a single dataframe as the only argument, and return a
+single dataframe.
 
-  If a __function__, it is used as is.
+If a \strong{function}, it is used as is.
 
-  If a __formula__, e.g. `~ .x + 2`, it is converted to a function. There are
-  three ways to refer to the arguments:
+If a \strong{formula}, e.g. \code{~ .x + 2}, it is converted to a function. There are
+three ways to refer to the arguments:
+\itemize{
+\item For a single argument function, use \code{.} * For a two argument function,
+use \code{.x} and \code{.y} * For more arguments, use \code{..1}, \code{..2}, \code{..3} etc
+}
 
-  * For a single argument function, use `.` * For a two argument function,
-  use `.x` and `.y` * For more arguments, use `..1`, `..2`, `..3` etc
-
-  This syntax allows you to create very compact anonymous functions.}
+This syntax allows you to create very compact anonymous functions.}
 }
 \description{
-This function parses the data downloded by [acs_download()] and creates a csv
+This function parses the data downloded by \code{\link[=acs_download]{acs_download()}} and creates a csv
 file for the selected parameters.
 }
