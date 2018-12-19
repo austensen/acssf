@@ -8,33 +8,28 @@
 swap_geo_id <- function(geo, span, type = c("name", "abb", "fips")) {
   type <- match.arg(type)
 
-  geo <- geo %>% stringr::str_trim() %>% stringr::str_to_lower()
+  geo <- geo %>%
+    stringr::str_trim() %>%
+    stringr::str_to_lower() %>%
+    stringr::str_pad(2, "left", "0")
 
   if (geo %in% c("as", "60", "gu", "66", "vi", "78")) {
     stop_glue("Data is not available for American Samoa, Guam, or Virgin Islands.")
   }
 
-  if (stringr::str_detect(geo, "^[[:digit:]]+$")) {
-    geo <- stringr::str_pad(geo, 2, "left", "0")
-
-    if (geo %in% fips_abb_name_table[["fips"]]) {
-      ret <- fips_abb_name_table %>%
-        dplyr::filter(fips == geo) %>%
-        dplyr::pull(type)
-    }
-  } else if (stringr::str_detect(geo, "^[[:alpha:]]+")) {
-    if (nchar(geo) == 2 && geo %in% fips_abb_name_table[["abb"]]) {
-      ret <- fips_abb_name_table %>%
-        dplyr::filter(abb == geo) %>%
-        dplyr::pull(type)
-    }
-  } else {
-    stop_glue("{geo} is not a valid FIPS code or abbreviation.")
+  # capitalize "of" in 5-yr data
+  if (span == 5L && geo %in% c("dc", "11") && type == "name") {
+    return("DistrictOfColumbia")
   }
 
-  # capitalize "of" in 5-yr data
-  if (span == 5L && ret == "dc") {
-    ret <- "DistrictOfColumbia"
+  ret <- fips_abb_name_table %>%
+    dplyr::filter_at(c("abb", "fips"), dplyr::any_vars(. == geo)) %>%
+    dplyr::pull(type)
+
+  if (length(ret) != 1) {
+    stop_glue("Data is not available for geo '{geo}'. Make sure 'geo' has \\
+              been provided as either a 2-letter state abbreviation or  \\
+              2-digit FIPS state code.")
   }
 
   ret
@@ -70,7 +65,7 @@ swap_geo_type <- function(geo, span, type = c("sum_level", "geo_type")) {
 
   geos_5yr <- c("tract", "blockgroup", "140", "150")
   if (length(dplyr::intersect(geos_5yr, ret)) && span != 5L) {
-    stop_glue("tract and blockgroup dta only available in 5-year data")
+    stop_glue("tract and blockgroup data only available in 5-year data")
   }
 
   ret
