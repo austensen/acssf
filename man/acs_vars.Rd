@@ -7,24 +7,24 @@
 acs_vars(..., .envir = parent.frame())
 }
 \arguments{
-\item{...}{\[`expressions`]: Expressions string(s) to format, multiple inputs
+\item{...}{[\code{expressions}]: Expressions string(s) to format, multiple inputs
 are concatenated together before formatting.}
 
-\item{.envir}{\[`environment: parent.frame()`]: Environment to evaluate each
+\item{.envir}{[\code{environment: parent.frame()}]: Environment to evaluate each
 expression in. Expressions are evaluated from left to right. If .x is an
 environment, the expressions are evaluated in that environment and .envir
 is ignored.}
 }
 \description{
-Use [glue::glue()] syntax to format and interpolate strings into ACS variable
+Use \code{\link[glue:glue]{glue::glue()}} syntax to format and interpolate strings into ACS variable
 codes. By placing * at the end of a glue expression the values will be padded
-with `"0"` to length 3.
+with \code{"0"} to length 3.
 }
 \examples{
 acs_vars("b25003_e{1:3*}")
 
 }
 \seealso{
-<http://glue.tidyverse.org/articles/transformers.html> for
-  explanation of transformers used here to pad numbers.
+\url{http://glue.tidyverse.org/articles/transformers.html} for
+explanation of transformers used here to pad numbers.
 }

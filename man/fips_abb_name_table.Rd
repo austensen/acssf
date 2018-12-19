@@ -5,9 +5,11 @@
 \alias{fips_abb_name_table}
 \title{US State (plus DC and PR) Abbreviations and FIPS codes}
 \format{A data frame with 53 rows and 3 variables:
-* abb: Official USPS Code
-* fips: Fips State Numeric Code
-* name: State Name (format used for FTP download files)}
+\itemize{
+\item abb: Official USPS Code
+\item fips: Fips State Numeric Code
+\item name: State Name (format used for FTP download files)
+}}
 \source{
 \url{https://www.census.gov/geo/reference/ansi_statetables.html}
 }

@@ -1,10 +1,10 @@
 #' Load all files created by acs_transform() into database table
 #'
-#' @param conn A [DBI::DBIConnection-class] object, as returned by
-#'   [DBI::dbConnect()].
+#' @param conn A [`DBI::DBIConnection-class`] object, as returned by
+#'   [`DBI::dbConnect()`].
 #' @param table_name A character string specifying the unquoted database table name.
 #' @param acs_dir The root directory in which all the ACS
-#'   data has been downloaded with [acs_download()]. Defaults to current working directory.
+#'   data has been downloaded with [`acs_download()`]. Defaults to current working directory.
 #'
 #' @export
 #'
@@ -14,7 +14,7 @@ acs_load <- function(conn, table_name, acs_dir =".") {
 
   clean_dir <- glue("{acs_dir}/Clean")
 
-  files <- fs::dir_ls(clean_dir, regexp = ".*\\.fst$", recursive = T)
+  files <- fs::dir_ls(clean_dir, regexp = ".*\\.fst$", recursive = TRUE)
 
   if (length(files) < 1) {
     stop_glue("There are no files in {clean_dir}

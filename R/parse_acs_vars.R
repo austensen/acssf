@@ -1,13 +1,31 @@
+#' Parse and R script for ACS Variables Used
+#'
+#' This function parses an R script to extract all the ACS variables that are
+#' used within it. These can then be passed to the `keep_vars` argument of
+#' [acs_transform()]. This helps limit the data that is extracted from raw files
+#' and processed to only what's needed to create your derived variables.
+#'
+#' @param file Path to one or more R scripts used to create your derived variables from
+#'   ACS-SF data.
+#'   Should include ACS variables using the format `b01001_e001`
+#'   for estimates, `b01001_m001` for margins, and `b01001_se001` for standard
+#'   errors. Use of [acs_sum()] to specify variables will also be correctly
+#'   parsed.
+#'
+#' @export
 
 parse_acs_vars <- function(file) {
-  file <- readr::read_file(file)
+  code <- file %>%
+    purrr::map_chr(readr::read_file) %>%
+    stringr::str_c(collapse = "\n")
+
 
   # get all ACS variables from the R script using the reguular expression pattern
   # looks for B and C tables of the formats "b01001_e002" or "B01001A_e001"
 
-  single_vars <- file %>%
+  single_vars <- code %>%
     stringr::str_to_lower() %>%
-    stringr::str_extract_all("[bc]\\d+[a-z]*_[em]\\d{3}") %>%
+    stringr::str_extract_all("[bc]\\d+[a-z]*_([em]|(se))\\d{3}") %>%
     purrr::flatten_chr() %>%
     unique()
 
@@ -19,7 +37,7 @@ parse_acs_vars <- function(file) {
   # "acs_sum", extract the string inputs, and evaluate the string versions of this
   # code with acssf::acs_vars() to get the full set of variable names.
 
-  sequence_vars <- file %>%
+  sequence_vars <- code %>%
     stringr::str_extract_all('\\"[bc].*\\"') %>%
     purrr::flatten_chr() %>%
     stringr::str_replace_all('\\"', '') %>%
@@ -40,7 +58,7 @@ parse_acs_vars <- function(file) {
 
   # Combine both sets of variables, change the format for use in acssf processing
   c(single_vars, sequence_vars) %>%
-    stringr::str_replace("_[em]", "_") %>%
+    stringr::str_replace("_([em]|(se))", "_") %>%
     stringr::str_sort() %>%
     unique()
 }

@@ -7,14 +7,14 @@
 validate_args(year, span, overwrite = NULL)
 }
 \arguments{
-\item{year}{\[`integer(1)`]: The year of the ACS sample. 2005 through 2016 are
+\item{year}{[\code{integer(1)}]: The year of the ACS sample. 2005 through 2016 are
 available.}
 
-\item{span}{\[`integer(1)`]: The span of years for ACS estimates. ACS 1-year, and
+\item{span}{[\code{integer(1)}]: The span of years for ACS estimates. ACS 1-year, and
 5-year surveys are supported.}
 
-\item{overwrite}{\[`logical(1)`]:  Whether existing versions of these files be overwriten.
-Defaults to `FALSE`.}
+\item{overwrite}{[\code{logical(1)}]:  Whether existing versions of these files be overwriten.
+Defaults to \code{FALSE}.}
 }
 \value{
 None

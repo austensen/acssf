@@ -7,19 +7,19 @@
 acs_download(year, span, geo, acs_dir = ".", overwrite = FALSE)
 }
 \arguments{
-\item{year}{\[`integer(1)`]: The year of the ACS sample. 2005 through 2016 are
+\item{year}{[\code{integer(1)}]: The year of the ACS sample. 2005 through 2016 are
 available.}
 
-\item{span}{\[`integer(1)`]: The span of years for ACS estimates. ACS 1-year, and
+\item{span}{[\code{integer(1)}]: The span of years for ACS estimates. ACS 1-year, and
 5-year surveys are supported.}
 
-\item{geo}{\[`character(1)`]: The 2-letter abbreviation for the state for which data will be
-downloaded. For geogrpahies that do not nest within states, use `"US"`.}
+\item{geo}{[\code{character(1)}]: The 2-letter abbreviation for the state for which data will be
+downloaded. For geogrpahies that do not nest within states, use \code{"US"}.}
 
-\item{acs_dir}{\[`character(1)`]: The root directory in which all the ACS SF data will be saved. Defaluts to current working directoy.}
+\item{acs_dir}{[\code{character(1)}]: The root directory in which all the ACS SF data will be saved. Defaluts to current working directoy.}
 
-\item{overwrite}{\[`logical(1)`]:  Whether existing versions of these files be overwriten.
-Defaults to `FALSE`.}
+\item{overwrite}{[\code{logical(1)}]:  Whether existing versions of these files be overwriten.
+Defaults to \code{FALSE}.}
 }
 \description{
 This function downloads American Community Survey (ACS) Summary File (SF)

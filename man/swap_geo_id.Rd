@@ -7,13 +7,13 @@
 swap_geo_id(geo, span, type = c("name", "abb", "fips"))
 }
 \arguments{
-\item{geo}{\[`character(1)`]: The 2-letter abbreviation for the state for which data will be
-downloaded. For geogrpahies that do not nest within states, use `"US"`.}
+\item{geo}{[\code{character(1)}]: The 2-letter abbreviation for the state for which data will be
+downloaded. For geogrpahies that do not nest within states, use \code{"US"}.}
 
-\item{span}{\[`integer(1)`]: The span of years for ACS estimates. ACS 1-year, and
+\item{span}{[\code{integer(1)}]: The span of years for ACS estimates. ACS 1-year, and
 5-year surveys are supported.}
 
-\item{type}{\[`character(1)`]: type of geogrphy ID to return ("name", "abb", or "fips")}
+\item{type}{[\code{character(1)}]: type of geogrphy ID to return ("name", "abb", or "fips")}
 }
 \value{
 Character(1) of either geography name, abbreviation, or FIPS code.

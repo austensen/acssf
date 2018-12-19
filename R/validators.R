@@ -45,6 +45,7 @@ swap_geo_id <- function(geo, span, type = c("name", "abb", "fips")) {
 #' @return Character(1) of either geography name, abbreviation, or FIPS code.
 #'
 swap_geo_type <- function(geo, span, type = c("sum_level", "geo_type")) {
+  # TODO: add explanation that all sum_level codes are supported, but only some commonly used levels have "geo_type" names supported
   type <- match.arg(type)
 
   geo <- geo %>% stringr::str_trim() %>% stringr::str_to_lower()
