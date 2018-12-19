@@ -64,7 +64,7 @@ download_docs <- function(docs_dir, year, span) {
 
   fs::dir_create(docs_dir)
 
-  base_url <- glue("ftp://ftp.census.gov/programs-surveys/acs/summary_file/{year}/documentation")
+  base_url <- glue("https://www2.census.gov/programs-surveys/acs/summary_file/{year}/documentation")
 
   # get Seq/Table/Var info
   if (year >= 2006) {
@@ -94,8 +94,8 @@ download_docs <- function(docs_dir, year, span) {
 
 
     # also need table shells to build for table/vars
-    shell_base_url <- "ftp://ftp.census.gov/programs-surveys/acs/tech_docs/table_shells/2005"
-    shell_filenames <- get_filenames(shell_base_url, "\\.xls$")
+    shell_base_url <- "https://www2.census.gov/programs-surveys/acs/tech_docs/table_shells/2005"
+    shell_filenames <- get_filenames_html(shell_base_url, "\\.xls$")
 
     shell_urls <- glue("{shell_base_url}/{shell_filenames}")
     shell_files <- glue("{docs_dir}/{shell_filenames}")
@@ -139,7 +139,7 @@ download_data <- function(data_dir, year, span, geo_name) {
 
   fs::dir_create(data_dir)
 
-  base_url <- glue("ftp://ftp.census.gov/programs-surveys/acs/summary_file/{year}")
+  base_url <- glue("https://www2.census.gov/programs-surveys/acs/summary_file/{year}")
 
   if (year >= 2009) {
     if (span == 1L) {
@@ -189,7 +189,7 @@ download_data <- function(data_dir, year, span, geo_name) {
       year %in% 2006:2008 ~ glue_chr("{year}{span}")
     )
 
-    data_filenames <- get_filenames(data_base_url, data_file_pattern)
+    data_filenames <- get_filenames_html(data_base_url, data_file_pattern)
 
     data_urls <- glue("{data_base_url}/{data_filenames}")
     data_files <- glue("{data_dir}/{data_filenames}")
@@ -203,8 +203,12 @@ download_data <- function(data_dir, year, span, geo_name) {
   fs::file_delete(zip_files)
 }
 
-# Get all files matching pattern from a ACS FTP page
-get_filenames <- function(url, pattern = ".*") {
+# Get all files matching pattern from a ACS FTP page (** ONLY WORKS WITH FTP **)
+
+# For some reason the FTP version is much less stable and often files wil be
+# unaccessible one minute and available minutes later. For now switching back to
+# the html web-scraping method
+get_filenames_ftp <- function(url, pattern = ".*") {
   hand <- curl::new_handle()
   curl::handle_setopt(hand, dirlistonly = TRUE)
 
@@ -218,6 +222,16 @@ get_filenames <- function(url, pattern = ".*") {
     stringr::str_subset(pattern)
 }
 
+# Get all files matching pattern from a ACS HTML page (** ONLY WORKS WITH HTML**)
+get_filenames_html <- function(url, pattern = ".*") {
+
+  xml2::read_html(url) %>%
+    rvest::html_nodes("table td a") %>%
+    rvest::html_attr("href") %>%
+    .[-1] %>% # drop first element, always "parent dir"
+    stringr::str_subset(pattern)
+
+}
 unzip_in_place <- function(path) {
   purrr::walk(path, function(path) {
     utils::unzip(path, exdir = fs::path_dir(path), junkpaths = TRUE)
