@@ -64,26 +64,31 @@ acs_transform <- function(year, span, geo, sum_levels, keep_vars, acs_dir = ".",
   # state_5_sumlevel
   # us_5_sumlevels
 
-  sum_levels <- swap_geo_type(sum_levels, "sum_level")
-  geo_types <- swap_geo_type(sum_levels, "geo_type")
-
+  sum_levels <- swap_geo_type(sum_levels, span, "sum_level")
 
   geo_abb <- swap_geo_id(geo, span, "abb")
   geo_name <- swap_geo_id(geo, span, "name")
 
-  trct_blkgrp <- geo_types %in% c("tract", "blockgroup")
+  trct_blkgrp <- any(sum_levels %in% c("140", "150"))
+  non_trct_blkgrp <- any(!sum_levels %in% c("140", "150"))
 
 
   raw_dir <- glue("{acs_dir}/Raw/{year}_{span}")
   docs_dir <- glue("{raw_dir}/_docs")
 
-  data_dir <- dplyr::case_when(
-    span == 1L                 ~ glue_chr("{raw_dir}/{geo_name}"),
-    span == 5L && trct_blkgrp  ~ glue_chr("{raw_dir}/{geo_name}/tract_blockgroup"),
-    span == 5L && !trct_blkgrp ~ glue_chr("{raw_dir}/{geo_name}/non_tract_blockgroup")
-  )
 
-  if (!fs::dir_exists(data_dir)) {
+  if (trct_blkgrp && non_trct_blkgrp) {
+    data_dir <- glue_chr("{raw_dir}/{geo_name}/{c('tract_blockgroup', 'non_tract_blockgroup')}")
+  } else {
+    data_dir <- dplyr::case_when(
+      span == 1L                 ~ glue_chr("{raw_dir}/{geo_name}"),
+      geo_abb == "us"  ~ glue_chr("{raw_dir}/{geo_name}/non_tract_blockgroup"),
+      non_trct_blkgrp ~ glue_chr("{raw_dir}/{geo_name}/non_tract_blockgroup"),
+      trct_blkgrp  ~ glue_chr("{raw_dir}/{geo_name}/tract_blockgroup")
+    )
+  }
+
+  if (!fs::dir_exists(data_dir[1])) {
     stop_glue("The folllowing folder does not exist.
               {data_dir}
               Make sure to run `acs_download()` for {geo} {year} {span}-year")
@@ -94,12 +99,12 @@ acs_transform <- function(year, span, geo, sum_levels, keep_vars, acs_dir = ".",
 
 
   # get table of geoid and logrecno to filter other tables
-  geos_table_slim <- get_geos_table(data_dir, docs_dir, year, span, geo_abb, sum_levels)
+  geos_table_slim <- get_geos_table(data_dir[1], docs_dir, year, span, geo_abb, sum_levels)
 
 
   # create a named list of table_vars (names are seq numbers), and keep only the
   # ones that contains variables we want to keep
-  seq_col_lookup <- get_seq_col_lookup(docs_dir, year) %>%
+  seq_col_lookup <- get_seq_col_lookup(docs_dir[1], year) %>%
     purrr::keep(~length(dplyr::intersect(keep_vars, .x)) > 0)
 
 
@@ -134,8 +139,8 @@ acs_transform <- function(year, span, geo, sum_levels, keep_vars, acs_dir = ".",
   first_cols <- c("year", "span", "sum_level", "geoid_full", "geoid", "geo_name")
   acs_var_pat <- "[bc]\\d{5}[a-z]*_[em]\\d{3}"
   keep_acs_vars <- c(
-    stringr::str_replace(keep_acs_vars, "_", "_e"),
-    stringr::str_replace(keep_acs_vars, "_", "_m")
+    stringr::str_replace(keep_vars, "_", "_e"),
+    stringr::str_replace(keep_vars, "_", "_m")
   )
 
   values %>%
@@ -187,7 +192,11 @@ import_values <- function(seq,
     year >= 2006L ~ glue("{data_dir}/m{year}{span}{geo_abb}{seq}.txt")
   )
 
-  estimates <- read_acs_csv(est_file, col_names, col_types)
+
+  # If this is being run for geos that include tract/blockgroup and
+  # non-tract/blockgroup data, then data_dir will be length two and so you'll
+  # ahve two file paths here to teh same type of file in each folder
+  estimates <- purrr::map_dfr(est_file, read_acs_csv, col_names, col_types)
 
   # For some geos/seqs the dataset is empty b/c they're for PR specific tables
   if (!length(estimates)) {
@@ -198,7 +207,7 @@ import_values <- function(seq,
     dplyr::select("logrecno", seq_keep_vars) %>%
     dplyr::rename_at(seq_keep_vars, stringr::str_replace, pattern = "(.*)(\\d{3})$", replacement = "\\1e\\2")
 
-  margins <- read_acs_csv(mar_file, col_names, col_types) %>%
+  margins <- purrr::map_dfr(mar_file, read_acs_csv, col_names, col_types) %>%
     dplyr::select_at(seq_keep_vars, stringr::str_replace, pattern = "(.*)(\\d{3})$", replacement = "\\1m\\2")
 
   # with estimates and margins sorted indentically can bind columns instead of join
@@ -211,6 +220,11 @@ import_values <- function(seq,
 }
 
 read_acs_csv <- function(file, col_names, col_types) {
+
+  # fread raises errors for empty files, so skip
+  if (fs::file_info(file)[["size"]] == 0) {
+    return(tibble::tibble())
+  }
 
   suppressWarnings( # warns for length=0 files, but this is handled above
     data.table::fread(
