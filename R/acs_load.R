@@ -23,7 +23,10 @@ acs_load <- function(conn, table_name, acs_dir =".") {
 
   suppressMessages(DBI::dbExecute(conn, glue("DROP TABLE IF EXISTS {table_name}")))
 
+  pb <- dplyr::progress_estimated(length(files))
+
   purrr::walk(files, function(path) {
+    pb$tick()$print()
     values <- fst::read_fst(path)
     DBI::dbWriteTable(conn, table_name, values, append = TRUE)
   })
