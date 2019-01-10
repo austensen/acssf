@@ -42,7 +42,7 @@ make_geos_table <- function(data_dir, docs_dir, year, span, geo_abb) {
   } else {
     excel_geo_file <- dplyr::case_when(
       span == 1L && year <= 2012L ~ glue("{docs_dir}/Mini_Geofile.xls"),
-      TRUE                        ~ glue("{docs_dir}/{span}_year_Mini_Geo.xlsx"),
+      TRUE                        ~ glue("{docs_dir}/{span}_year_Mini_Geo.xlsx")
     )
 
     keep_cols <- dplyr::case_when(
@@ -72,7 +72,7 @@ match_sheet_case <- function(geo_abb, excel_file) {
 
   sheet_names <- readxl::excel_sheets(excel_file)
 
-  if (stringr::str_detect(sheet_names[[1]], "A-Z")) {
+  if (stringr::str_detect(sheet_names[[1]], "[A-Z]")) {
     stringr::str_to_upper(geo_abb)
   } else {
     stringr::str_to_lower(geo_abb)
