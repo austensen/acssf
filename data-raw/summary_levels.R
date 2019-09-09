@@ -1,5 +1,3 @@
-
-
 sum_level_info <- tibble::tribble(
   ~sum_level, ~name, ~geo,
   "010", "United States", "US",
