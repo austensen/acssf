@@ -21,7 +21,9 @@ acs_load <- function(conn, table_name, acs_dir =".") {
               First run `acs_transform()` to create files for upload.")
   }
 
-  suppressMessages(DBI::dbExecute(conn, glue("DROP TABLE IF EXISTS {table_name}")))
+  if (DBI::dbExistsTable(conn, table_name)) {
+    DBI::dbExecute(conn, glue("DROP TABLE {table_name}"))
+  }
 
   pb <- dplyr::progress_estimated(length(files))
 

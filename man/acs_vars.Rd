@@ -23,6 +23,8 @@ with \code{"0"} to length 3.
 \examples{
 acs_vars("b25003_e{1:3*}")
 
+acs_vars("b25003_e{c(1, 3)*}")
+
 }
 \seealso{
 \url{http://glue.tidyverse.org/articles/transformers.html} for

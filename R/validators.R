@@ -35,44 +35,6 @@ swap_geo_id <- function(geo, span, type = c("name", "abb", "fips")) {
   ret
 }
 
-#' Return desired geography type variable from sum level code or name
-#'
-#' @param geo \[`character(1)`]: census sum level code or geography type name
-#'   (eg. `"140"` or `"tract"`). For supported values see [`sum_level_info`]
-#' @param type \[`character(1)`]: type of geogrphy ID to return ("name", "abb",
-#'   or "fips")
-#'
-#' @return Character(1) of either geography name, abbreviation, or FIPS code.
-#'
-swap_geo_type <- function(geo, span, type = c("sum_level", "geo_type")) {
-  # TODO: add explanation that all sum_level codes are supported, but only some commonly used levels have "geo_type" names supported
-  type <- match.arg(type)
-
-  geo <- geo %>% stringr::str_trim() %>% stringr::str_to_lower()
-  geo <- dplyr::if_else(stringr::str_detect(geo, "^[[:digit:]]+$"), stringr::str_pad(geo, 3, "left", "0"), geo)
-
-  ret <- sum_level_info %>%
-    dplyr::filter(sum_level %in% geo | geo_type %in% geo) %>%
-    dplyr::pull(type)
-
-  if (length(ret) != length(geo)) {
-    sum_level_info %>%
-      dplyr::select(sum_level, geo_type) %>%
-      capture.output() %>%
-      paste(collapse = "\n") %>%
-      message()
-    stop_glue("`geo` must be one of the above sum_level or geo_type values")
-  }
-
-  geos_5yr <- c("tract", "blockgroup", "140", "150")
-  if (length(dplyr::intersect(geos_5yr, ret)) && span != 5L) {
-    stop_glue("tract and blockgroup data only available in 5-year data")
-  }
-
-  ret
-}
-
-
 
 #' Validate function arguments
 #'
@@ -85,7 +47,7 @@ swap_geo_type <- function(geo, span, type = c("sum_level", "geo_type")) {
 #'
 #' @return None
 #'
-validate_args <- function(year, span, overwrite = NULL) {
+validate_args <- function(year, span, overwrite = NULL, sum_levels = NULL) {
   year <- as.integer(year)
   if (is.na(year)) {
     stop_glue("`year` must be an integer.")
@@ -110,5 +72,17 @@ validate_args <- function(year, span, overwrite = NULL) {
 
   if (!is.null(overwrite) && !is.logical(overwrite)) {
     stop_glue("`overwrite` must be logical.")
+  }
+
+  if (!is.null(sum_levels)) {
+    bad_sum_levels <- dplyr::setdiff(sum_levels, sum_level_info[["sum_level"]])
+    stop_glue("The following values for `sum_levels are invalid:
+              {glue::collapse(bad_sum_levels, ',')}
+              See acssf::sum_level_info for available sum_levels.")
+
+    if (any(sum_levels %in% c("140", "150")) && span != 5) {
+      stop_glue("Tract (140) and Block Group (150) sum levels are only \\
+                available for 5-year data.")
+    }
   }
 }

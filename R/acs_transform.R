@@ -37,7 +37,8 @@ acs_transform <- function(year, span, geo, sum_levels, keep_vars, acs_dir = ".",
 
   validate_args(
     year = year,
-    span = span
+    span = span,
+
   )
 
   if (is.null(.f)) {
@@ -63,8 +64,6 @@ acs_transform <- function(year, span, geo, sum_levels, keep_vars, acs_dir = ".",
   # us_1_sumlevels <- c("010", "020", "030", "250", "310", "314", "330", "335", "350", "355", "400")
   # state_5_sumlevel
   # us_5_sumlevels
-
-  sum_levels <- swap_geo_type(sum_levels, span, "sum_level")
 
   geo_abb <- swap_geo_id(geo, span, "abb")
   geo_name <- swap_geo_id(geo, span, "name")

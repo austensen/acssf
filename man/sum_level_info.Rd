@@ -18,6 +18,6 @@
 sum_level_info
 }
 \description{
-A dataset containing the summary levels supported by \code{\link[=acs_extract_raw]{acs_extract_raw()}} and the ACS surveys for which they are available.
+A dataset containing the summary levels supported by \code{\link[=acs_transform]{acs_transform()}} and the ACS surveys for which they are available.
 }
 \keyword{datasets}

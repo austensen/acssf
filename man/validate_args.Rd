@@ -4,7 +4,7 @@
 \alias{validate_args}
 \title{Validate function arguments}
 \usage{
-validate_args(year, span, overwrite = NULL)
+validate_args(year, span, overwrite = NULL, sum_levels = NULL)
 }
 \arguments{
 \item{year}{[\code{integer(1)}]: The year of the ACS sample. 2005 through 2016 are
