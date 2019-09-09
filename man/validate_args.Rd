@@ -7,14 +7,18 @@
 validate_args(year, span, overwrite = NULL, sum_levels = NULL)
 }
 \arguments{
-\item{year}{[\code{integer(1)}]: The year of the ACS sample. 2005 through 2016 are
-available.}
+\item{year}{[\code{integer(1)}]: The year of the ACS sample. 2005 through 2016
+are available.}
 
-\item{span}{[\code{integer(1)}]: The span of years for ACS estimates. ACS 1-year, and
-5-year surveys are supported.}
+\item{span}{[\code{integer(1)}]: The span of years for ACS estimates. ACS 1-year,
+and 5-year surveys are supported.}
 
-\item{overwrite}{[\code{logical(1)}]:  Whether existing versions of these files be overwriten.
-Defaults to \code{FALSE}.}
+\item{overwrite}{[\code{logical(1)}]: Whether existing versions of these files be
+overwriten. Defaults to \code{FALSE}.}
+
+\item{sum_levels}{[\code{character}]: Codes for the desiered Summary Levels (eg.
+"140" for Tracts). See the built-in dataset \code{sum_level_info} for all
+available codes.}
 }
 \value{
 None

@@ -36,49 +36,49 @@ make_seq_col_lookup <- function(docs_dir, year) {
       if (!file.exists(glue("{raw_dir}/_docs/{table_id}.xls"))) return(NA)
       glue("{raw_dir}/_docs/{table_id}.xls") %>%
         readxl::read_xls() %>%
-        dplyr::filter(str_detect(`Line Number`, "^\\d+$")) %>%
+        dplyr::filter(stringr::str_detect({{"Line Number"}}, "^\\d+$")) %>%
         dplyr::mutate(
-          table = stringr::str_to_lower(`Table ID`),
-          row = stringr::str_pad(`Line Number`, 3, "left", "0"),
-          table_var = stringr::str_c(table, "_", row)
+          table = stringr::str_to_lower({{"Table ID"}}),
+          row = stringr::str_pad({{"Line Number"}}, 3, "left", "0"),
+          table_var = stringr::str_c({{"table"}}, "_", {{"row"}})
         ) %>%
-        pull(table_var)
+        dplyr::pull({{"table_var"}})
     }
 
     # Need to get the seq/table correspondance from this fine, but get the
     # table_vars from shell tables
     vars_raw <- glue("{docs_dir}/Chapter_5_tables_summary_list.xls") %>%
-      read_excel() %>%
-      transmute(
-        table = `Table ID`,
-        seq = as.integer(`Sequence Number`)
+      readxl::read_excel() %>%
+      dplyr::transmute(
+        table = {{"Table ID"}},
+        seq = as.integer({{"Sequence Number"}})
       ) %>%
-      filter(
-        !is.na(table),
+      dplyr::filter(
+        !is.na({{"table"}}),
         # for some reason there are no data files for these seq
-        !seq %in% 139:148,
-        seq <= 150,
+        !{{"seq"}} %in% 139:148,
+        {{"seq"}} <= 150,
         # C tables have row info inside same-numer B table .xls
-        str_detect(table, "^B"),
+        stringr::str_detect({{"table"}}, "^B"),
         # Some random tables missing from xls files:
-        !table %in% c("B08134", "B992523")
+        !{{"table"}} %in% c("B08134", "B992523")
       ) %>%
-      transmute(
-        seq = str_pad(seq, 7, "left", "0"),
-        table_var = map(table, get_2005_table_vars)
+      dplyr::transmute(
+        seq = stringr::str_pad({{"seq"}}, 7, "left", "0"),
+        table_var = purrr::map({{"table"}}, get_2005_table_vars)
       ) %>%
-      unnest(table_var) %>%
+      tidyr::unnest({{"table_var"}}) %>%
       # The table shells don't match the data files in some cases. they list more
       # rows that are actually in the table. For example it says there are 10 rows
       # for c02005 but there are really only 9 (confirmed on FactFinder)
-      filter(
-        !table_var %in% c("c02005_010"),
-        !stringr::str_detect(table_var, "pr")
+      dplyr::filter(
+        !{{"table_var"}} %in% c("c02005_010"),
+        !stringr::str_detect({{"table_var"}}, "pr")
       ) %>%
-      group_by(seq) %>%
-      summarise(table_var = list(table_var))
+      dplyr::group_by({{"seq"}}) %>%
+      dplyr::summarise(table_var = list({{"table_var"}}))
 
-    seq_col_lookup <- set_names(vars_raw[["table_var"]], vars_raw[["seq"]])
+    seq_col_lookup <- purrr::set_names(vars_raw[["table_var"]], vars_raw[["seq"]])
 
   } else {
     vars_raw <- glue("{docs_dir}/seq_table_lookup.xls") %>%
@@ -91,15 +91,15 @@ make_seq_col_lookup <- function(docs_dir, year) {
       ) %>%
       # remove extra rows (table fillers) to avoid duplicate table_vars
       dplyr::filter(
-        !is.na(line_num),
-        line_num != "0",
-        !stringr::str_detect(line_num, "\\.")
+        !is.na({{"line_num"}}),
+        {{"line_num"}} != "0",
+        !stringr::str_detect({{"line_num"}}, "\\.")
       ) %>%
       dplyr::transmute(
-        table = stringr::str_to_lower(table),
-        var = stringr::str_pad(line_num, 3, "left", "0"),
-        table_var = stringr::str_c(table, "_", var),
-        seq = stringr::str_c(stringr::str_pad(seq, 4, "left", "0"), "000")
+        table = stringr::str_to_lower({{"table"}}),
+        var = stringr::str_pad({{"line_num"}}, 3, "left", "0"),
+        table_var = stringr::str_c({{"table"}}, "_", {{"var"}}),
+        seq = stringr::str_c(stringr::str_pad({{"seq"}}, 4, "left", "0"), "000")
       )
 
     # create a named list of table_vars (names are seq numbers)

@@ -23,7 +23,12 @@ Imports:
     glue,
     xml2,
     tidyr,
-    curl
+    curl,
+    DBI,
+    fs,
+    fst,
+    data.table,
+    stats
 RoxygenNote: 6.1.0
 URL: https://github.com/austensen/acssf
 BugReports: https://github.com/austensen/acssf/issues

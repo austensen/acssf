@@ -38,12 +38,15 @@ swap_geo_id <- function(geo, span, type = c("name", "abb", "fips")) {
 
 #' Validate function arguments
 #'
-#' @param year \[`integer(1)`]: The year of the ACS sample. 2005 through 2016 are
-#'   available.
-#' @param span \[`integer(1)`]: The span of years for ACS estimates. ACS 1-year, and
-#'   5-year surveys are supported.
-#' @param overwrite \[`logical(1)`]:  Whether existing versions of these files be overwriten.
-#'   Defaults to `FALSE`.
+#' @param year \[`integer(1)`]: The year of the ACS sample. 2005 through 2016
+#'   are available.
+#' @param span \[`integer(1)`]: The span of years for ACS estimates. ACS 1-year,
+#'   and 5-year surveys are supported.
+#' @param overwrite \[`logical(1)`]: Whether existing versions of these files be
+#'   overwriten. Defaults to `FALSE`.
+#' @param sum_levels \[`character`]: Codes for the desiered Summary Levels (eg.
+#'   "140" for Tracts). See the built-in dataset `sum_level_info` for all
+#'   available codes.
 #'
 #' @return None
 #'
@@ -75,7 +78,7 @@ validate_args <- function(year, span, overwrite = NULL, sum_levels = NULL) {
   }
 
   if (!is.null(sum_levels)) {
-    bad_sum_levels <- dplyr::setdiff(sum_levels, sum_level_info[["sum_level"]])
+    bad_sum_levels <- dplyr::setdiff(sum_levels, acssf::sum_level_info[["sum_level"]])
     stop_glue("The following values for `sum_levels are invalid:
               {glue::collapse(bad_sum_levels, ',')}
               See acssf::sum_level_info for available sum_levels.")

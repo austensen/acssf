@@ -18,8 +18,8 @@ acs_margin_to_se <- function(.data, level = 0.90) {
     stop_glue("level must be betwen 0 and 1")
   }
 
-  z_score <- qnorm((1.0-level)/2, lower.tail = F)
-  z_score_90 <- qnorm((1.0-0.95)/2, lower.tail = F)
+  z_score <- stats::qnorm((1.0-level)/2, lower.tail = F)
+  z_score_90 <- stats::qnorm((1.0-0.95)/2, lower.tail = F)
 
   .data %>%
     dplyr::mutate_at(
@@ -37,10 +37,11 @@ acs_margin_to_se <- function(.data, level = 0.90) {
 #' Simple wrapper of [dplyr::select()] to drop ACS variable columns (estimates
 #' or margins) created by [acs_transform()].
 #'
-#' @param df \[`data.frame`]: A data.frame with ACS variable columns using the
-#'   format created by [acs_make_table()]: `b25002_e001` for estimates and
+#' @param .data \[`data.frame`]: A data.frame with ACS variable columns using
+#'   the format created by [acs_transform()]: `b25002_e001` for estimates and
 #'   `b25002_m001` for margins.
-#'
+#' @param type \[character(1)]: The type of columns to drop. Must be one of:
+#'   `"all"`, `"estimates"`, `"margins"`, or `"standard errors"`
 #' @details This function simply wraps the `dplyr` expression `select(df,
 #'   -matches("pattern"))`, where the regular expression is
 #'   `"[bc]\\d{5}[a-z]*_e\\d{3}"` for estimates and `"[bc]\\d{5}[a-z]*_m\\d{3}"`
@@ -65,9 +66,8 @@ acs_margin_to_se <- function(.data, level = 0.90) {
 #'
 #' df %>%
 #'   mutate(foo = acs_sum("b25070_e{1:2*}")) %>%
-#'   acs_drop_vars("both")
+#'   acs_drop_vars("all")
 #'
-#' @name acs_drop
 #' @export
 acs_drop_vars <- function(.data, type = c("all", "estimates", "margins", "standard errors")) {
   type <- match.arg(type)
