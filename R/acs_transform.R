@@ -94,12 +94,10 @@ acs_transform <- function(year, span, geo, sum_levels, keep_vars, acs_dir = ".",
   }
 
   clean_dir <- glue("{acs_dir}/Clean/{year}_{span}")
-  fs::dir_create(clean_dir, recursive = TRUE)
+  fs::dir_create(clean_dir, recurse = TRUE)
 
 
-  # get table of geoid and logrecno to filter other tables
   geos_table_slim <- get_geos_table(data_dir[1], docs_dir, year, span, geo_abb, sum_levels)
-
 
   # create a named list of table_vars (names are seq numbers), and keep only the
   # ones that contains variables we want to keep
@@ -129,7 +127,10 @@ acs_transform <- function(year, span, geo, sum_levels, keep_vars, acs_dir = ".",
 
 
   # Possible that there are no rows returned (eg. place in WY for 1yr)
-  if (nrow(values) == 0) return(invisible(NULL))
+  if (nrow(values) == 0) {
+    warn_glue("No data for {geo_abb} {year} {span}yr")
+    return(invisible(NULL))
+  }
 
   # There are some tables that appear in multiple Seq files for some reason
   # eg. B05002 is in 23 and 171, so in the map_dfc() they get a "1" added to
@@ -180,7 +181,7 @@ import_values <- function(seq,
   geo_cols <- c("geoid_full", "geoid", "sum_level", "geo_name")
 
   col_names <- c(first_cols, seq_cols)
-  col_types <- list(character = 1:6, numeric = 7:length(seq_cols))
+  col_types <- c(rep("character", 6), rep("numeric", length(seq_cols)))
 
   est_file <- dplyr::case_when(
     year == 2005L ~ glue("{data_dir}/{geo_abb}{seq}e.{year}-{span}yr"),
@@ -197,10 +198,12 @@ import_values <- function(seq,
   # ahve two file paths here to teh same type of file in each folder
   estimates <- purrr::map_dfr(est_file, read_acs_csv, col_names, col_types)
 
+
   # For some geos/seqs the dataset is empty b/c they're for PR specific tables
   if (!length(estimates)) {
     return(tibble::tibble())
   }
+
 
   estimates <- estimates %>%
     dplyr::select("logrecno", seq_keep_vars) %>%

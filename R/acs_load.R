@@ -14,7 +14,7 @@ acs_load <- function(conn, table_name, acs_dir =".") {
 
   clean_dir <- glue("{acs_dir}/Clean")
 
-  files <- fs::dir_ls(clean_dir, regexp = ".*\\.fst$", recursive = TRUE)
+  files <- fs::dir_ls(clean_dir, regexp = ".*\\.fst$", recurse = TRUE)
 
   if (length(files) < 1) {
     stop_glue("There are no files in {clean_dir}

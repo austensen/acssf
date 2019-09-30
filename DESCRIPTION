@@ -29,7 +29,7 @@ Imports:
     fst,
     data.table,
     stats
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 URL: https://github.com/austensen/acssf
 BugReports: https://github.com/austensen/acssf/issues
 Roxygen: list(markdown = TRUE)

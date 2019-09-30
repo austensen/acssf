@@ -5,6 +5,7 @@
 #'
 #' @docType package
 #' @name acssf
+#' @import rlang
 #' @importFrom dplyr %>%
 #' @importFrom glue glue
 NULL

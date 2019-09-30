@@ -17,7 +17,7 @@ get_geos_table <- function(data_dir, docs_dir, year, span, geo_abb, .sum_levels)
     )
   }
 
-  dplyr::filter(geos_table, {{"sum_level"}} %in% .sum_levels)
+  dplyr::filter(geos_table, .data[["sum_level"]] %in% .sum_levels)
 }
 
 
@@ -60,8 +60,8 @@ make_geos_table <- function(data_dir, docs_dir, year, span, geo_abb) {
 
   geos_table_raw %>%
     dplyr::mutate(
-      sum_level = stringr::str_sub({{"geoid_full"}}, 1, 3),
-      geoid = stringr::str_extract({{"geoid_full"}}, "\\d+$")
+      sum_level = stringr::str_sub(.data[["geoid_full"]], 1, 3),
+      geoid = stringr::str_extract(.data[["geoid_full"]], "\\d+$")
     ) %>%
     readr::write_rds(glue("{data_dir}/geos_table.rds"))
 }

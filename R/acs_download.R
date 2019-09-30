@@ -47,7 +47,7 @@ acs_download <- function(year, span, geo, acs_dir = ".", overwrite = FALSE) {
   download_data(data_dir, year, span, geo_name)
 
   data_dir %>%
-    fs::dir_ls(regexp = ".*\\.zip$", recursive = TRUE) %>%
+    fs::dir_ls(regexp = ".*\\.zip$", recurse = TRUE) %>%
     fs::file_delete()
 }
 
@@ -62,7 +62,7 @@ download_docs <- function(docs_dir, year, span) {
     return(invisible(NULL))
   }
 
-  fs::dir_create(docs_dir, recursive = TRUE)
+  fs::dir_create(docs_dir, recurse = TRUE)
 
   base_url <- glue("https://www2.census.gov/programs-surveys/acs/summary_file/{year}/documentation")
 
@@ -75,11 +75,12 @@ download_docs <- function(docs_dir, year, span) {
       year == 2009 && span == 1L  ~ glue_chr("{base_url}/{span}_year/user_tools/merge_5_6.xls"),
       year == 2009 && span == 5L  ~ glue_chr("{base_url}/{span}_year/user_tools/Sequence_Number_and_Table_Number_Lookup.xls"),
       year %in% 2010:2012         ~ glue_chr("{base_url}/{span}_year/user_tools/Sequence_Number_and_Table_Number_Lookup.xls"),
-      year >= 2013                ~ glue_chr("{base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.xls")
+      year %in% 2013:2017         ~ glue_chr("{base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.xls"),
+      year >= 2018                ~ glue_chr("{base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.csv")
     )
 
     # standardize when saving local copy for easier lookup later
-    docs_file <- glue("{docs_dir}/seq_table_lookup.xls")
+    docs_file <- glue("{docs_dir}/seq_table_lookup.{fs::path_ext(docs_file_url)}")
 
     download_files(docs_file_url, docs_file, mode = "wb")
   } else if (year == 2005) {
@@ -137,7 +138,7 @@ download_data <- function(data_dir, year, span, geo_name) {
     return(invisible(NULL))
   }
 
-  fs::dir_create(data_dir, recursive = TRUE)
+  fs::dir_create(data_dir, recurse = TRUE)
 
   base_url <- glue("https://www2.census.gov/programs-surveys/acs/summary_file/{year}")
 
@@ -198,14 +199,14 @@ download_data <- function(data_dir, year, span, geo_name) {
   }
 
   # Unzip all .zip files into their existing folder, then delete .zip files
-  zip_files <- fs::dir_ls(data_dir, regexp = ".*\\.zip$", recursive = TRUE)
+  zip_files <- fs::dir_ls(data_dir, regexp = ".*\\.zip$", recurse = TRUE)
   unzip_in_place(zip_files)
   fs::file_delete(zip_files)
 }
 
 # Get all files matching pattern from a ACS FTP page (** ONLY WORKS WITH FTP **)
 
-# For some reason the FTP version is much less stable and often files wil be
+# NOT USED: For some reason the FTP version is much less stable and often files will be
 # unaccessible one minute and available minutes later. For now switching back to
 # the html web-scraping method
 get_filenames_ftp <- function(url, pattern = ".*") {
