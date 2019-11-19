@@ -19,12 +19,12 @@ acs_margin_to_se <- function(.data, level = 0.90) {
   }
 
   z_score <- stats::qnorm((1.0-level)/2, lower.tail = F)
-  z_score_90 <- stats::qnorm((1.0-0.95)/2, lower.tail = F)
+  z_score_90 <- stats::qnorm((1.0-0.90)/2, lower.tail = F)
 
   .data %>%
     dplyr::mutate_at(
       dplyr::vars(dplyr::matches("[bc]\\d{5}[a-z]*_m\\d{3}")),
-      dplyr::funs(z_score * (. / z_score_90))
+      dplyr::funs((z_score * (. / z_score_90))/z_score)
     ) %>%
     dplyr::rename_at(
       dplyr::vars(dplyr::matches("[bc]\\d{5}[a-z]*_m\\d{3}")),
@@ -205,7 +205,7 @@ se_prop <- function(num, num_se, denom, denom_se) {
     return(num_se / denom)
   }
 
-  tmp_val <- num_se^2 + p^2 * denom_se^2
+  tmp_val <- num_se^2 - p^2 * denom_se^2
 
   if (tmp_val >= 0) {
     return((1 / denom) * sqrt(tmp_val))
