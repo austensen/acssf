@@ -3,7 +3,6 @@
 \docType{package}
 \name{acssf}
 \alias{acssf}
-\alias{acssf-package}
 \title{Download ACS Summary File Data and Build Database.}
 \description{
 Download ACS Summary File data from FTP site, clean data and create tables in

@@ -7,7 +7,7 @@
 validate_args(year, span, overwrite = NULL, sum_levels = NULL)
 }
 \arguments{
-\item{year}{[\code{integer(1)}]: The year of the ACS sample. 2005 through 2016
+\item{year}{[\code{integer(1)}]: The year of the ACS sample. 2005 through 2018
 are available.}
 
 \item{span}{[\code{integer(1)}]: The span of years for ACS estimates. ACS 1-year,

@@ -4,8 +4,7 @@
 \alias{acs_transform}
 \title{Parse raw data, calculate new varibles, export as csv}
 \usage{
-acs_transform(year, span, geo, sum_levels, keep_vars, acs_dir = ".",
-  .f = NULL)
+acs_transform(year, span, geo, sum_levels, keep_vars, acs_dir = ".", .f = NULL)
 }
 \arguments{
 \item{year}{[integer(1)]: The year of the desired ACS sample. For
