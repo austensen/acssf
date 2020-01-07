@@ -51,9 +51,16 @@ acs_download <- function(year, span, geo, acs_dir = ".", overwrite = FALSE) {
     fs::file_delete()
 }
 
-# TODO: write bare-bones documentation for helper functions
-
-# Downloads Seq/Table/Var Info
+#' Download Seq/Table/Var Info
+#'
+#' For a given year/span (eg. 2018 1yr) gets Seq/Table number data and geogrphy
+#' IDs data and saves them to the provided local directory for documentation
+#' files.
+#'
+#' @param docs_dir Local path to documentation folder
+#' @param year Year of ACS data, as number
+#' @param span 1 or 5 year for ACS data, as a number
+#'
 download_docs <- function(docs_dir, year, span) {
 
   # Only one set of docs per year/span
@@ -121,13 +128,12 @@ download_docs <- function(docs_dir, year, span) {
 
     geos_file <- glue_chr("{docs_dir}/{geos_filename}")
 
-    # TODO: don't download if already there (wait until all bugs worked out)
     download_files(geos_url, geos_file)
   }
 }
 
 
-# Downloads Geography and Data Tables
+# Downloads Data Tables
 
 download_data <- function(data_dir, year, span, geo_name) {
 
@@ -204,26 +210,8 @@ download_data <- function(data_dir, year, span, geo_name) {
   fs::file_delete(zip_files)
 }
 
-# Get all files matching pattern from a ACS FTP page (** ONLY WORKS WITH FTP **)
-
-# NOT USED: For some reason the FTP version is much less stable and often files will be
-# unaccessible one minute and available minutes later. For now switching back to
-# the html web-scraping method
-get_filenames_ftp <- function(url, pattern = ".*") {
-  hand <- curl::new_handle()
-  curl::handle_setopt(hand, dirlistonly = TRUE)
-
-  url %>%
-    stringr::str_c("/") %>%
-    curl::curl_fetch_memory(handle = hand) %>%
-    .[["content"]] %>%
-    rawToChar() %>%
-    stringr::str_split("\\n") %>%
-    .[[1]] %>%
-    stringr::str_subset(pattern)
-}
-
-# Get all files matching pattern from a ACS HTML page (** ONLY WORKS WITH HTML**)
+# Get all files matching pattern from a ACS HTML page
+# (ONLY WORKS WITH HTML, NOT FTP)
 get_filenames_html <- function(url, pattern = ".*") {
 
   xml2::read_html(url) %>%
@@ -233,6 +221,7 @@ get_filenames_html <- function(url, pattern = ".*") {
     stringr::str_subset(pattern)
 
 }
+
 unzip_in_place <- function(path) {
   purrr::walk(path, function(path) {
     utils::unzip(path, exdir = fs::path_dir(path), junkpaths = TRUE)
