@@ -38,7 +38,7 @@ swap_geo_id <- function(geo, span, type = c("name", "abb", "fips")) {
 
 #' Validate function arguments
 #'
-#' @param year \[`integer(1)`]: The year of the ACS sample. 2005 through 2016
+#' @param year \[`integer(1)`]: The year of the ACS sample. 2005 through 2018
 #'   are available.
 #' @param span \[`integer(1)`]: The span of years for ACS estimates. ACS 1-year,
 #'   and 5-year surveys are supported.
@@ -80,7 +80,7 @@ validate_args <- function(year, span, overwrite = NULL, sum_levels = NULL) {
   if (!is.null(sum_levels)) {
     bad_sum_levels <- dplyr::setdiff(sum_levels, acssf::sum_level_info[["sum_level"]])
     stop_glue("The following values for `sum_levels are invalid:
-              {glue::collapse(bad_sum_levels, ',')}
+              {glue::glue_collapse(bad_sum_levels, ',')}
               See acssf::sum_level_info for available sum_levels.")
 
     if (any(sum_levels %in% c("140", "150")) && span != 5) {
