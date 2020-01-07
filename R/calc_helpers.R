@@ -12,7 +12,6 @@
 #'   have been made.
 #' @param level Confidence level for standard errors. Defaults to 0.90.
 #'
-#' @export
 acs_margin_to_se <- function(.data, level = 0.90) {
   if (level <= 0 || level >= 1) {
     stop_glue("level must be betwen 0 and 1")
@@ -167,7 +166,6 @@ pad_transformer <- function(code, envir) {
 #'   )
 #'
 #' @name acs_clac
-#' @export
 acs_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
   df <- acs_vars_to_df(..., .envir = .envir)
   rowSums(df, na.rm = na.rm)
@@ -182,7 +180,6 @@ acs_vars_to_df <- function(..., .envir = parent.frame()) {
 }
 
 #' @rdname acs_clac
-#' @export
 acs_se_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
   df <- acs_vars_to_df(..., .envir = .envir)
 
@@ -193,7 +190,6 @@ acs_se_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
 }
 
 #' @rdname acs_clac
-#' @export
 acs_se_prop <- function(num, num_se, denom, denom_se) {
   purrr::pmap_dbl(list(num, num_se, denom, denom_se), se_prop)
 }
@@ -215,14 +211,12 @@ se_prop <- function(num, num_se, denom, denom_se) {
 }
 
 #' @rdname acs_clac
-#' @export
 acs_se_ratio <- function(num, num_se, denom, denom_se) {
   p <- num / denom
   (1 / denom) * sqrt(num_se^2 + p^2 * denom_se^2)
 }
 
 #' @rdname acs_clac
-#' @export
 acs_se_prod <- function (val_1, se_1, val_2, se_2) {
   sqrt(val_1 * se_2^2 + val_2 * se_1^2)
 }
