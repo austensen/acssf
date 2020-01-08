@@ -149,7 +149,7 @@ pad_transformer <- function(code, envir) {
 #' @seealso [acs_vars()], [acs_margin_to_se()]
 #'
 #' @examples
-#'
+#' \dontrun{
 #' library(dplyr)
 #'
 #' df <- tibble(
@@ -164,7 +164,7 @@ pad_transformer <- function(code, envir) {
 #'     bar = acs_sum("b25070_e{1:2*}", "b25070_e003"),
 #'     baz = acs_sum("b25070_e002", "b25070_e003")
 #'   )
-#'
+#' }
 #' @name acs_clac
 acs_sum <- function(..., na.rm = TRUE, .envir = parent.frame()) {
   df <- acs_vars_to_df(..., .envir = .envir)
