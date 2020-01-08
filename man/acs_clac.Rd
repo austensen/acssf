@@ -62,7 +62,7 @@ errors from the ACS estimates returned by \code{\link[=acs_transform]{acs_transf
 }
 }
 \examples{
-
+\dontrun{
 library(dplyr)
 
 df <- tibble(
@@ -77,7 +77,7 @@ df \%>\%
     bar = acs_sum("b25070_e{1:2*}", "b25070_e003"),
     baz = acs_sum("b25070_e002", "b25070_e003")
   )
-
+}
 }
 \seealso{
 \code{\link[=acs_vars]{acs_vars()}}, \code{\link[=acs_margin_to_se]{acs_margin_to_se()}}
