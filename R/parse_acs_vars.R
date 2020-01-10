@@ -9,7 +9,7 @@
 #'   ACS-SF data.
 #'   Should include ACS variables using the format `b01001_e001`
 #'   for estimates, `b01001_m001` for margins, and `b01001_se001` for standard
-#'   errors. Use of [acs_sum()] to specify variables will also be correctly
+#'   errors. Use of [acs_est_sum()] to specify variables will also be correctly
 #'   parsed.
 #'
 #' @export
@@ -30,11 +30,11 @@ parse_acs_vars <- function(file) {
     unique()
 
 
-  # Sometimes in the R script we use acssf::acs_sum() to get sequences of
-  # variables, eg. acs_sum("b01001_e{c(1:3, 5, 8)*})
+  # Sometimes in the R script we use acssf::acs_est_sum() to get sequences of
+  # variables, eg. acs_est_sum("b01001_e{c(1:3, 5, 8)*})
 
   # The above code will miss these, so below we look for lines that contain
-  # "acs_sum", extract the string inputs, and evaluate the string versions of this
+  # "acs_est_sum", extract the string inputs, and evaluate the string versions of this
   # code with acssf::acs_vars() to get the full set of variable names.
 
   sequence_vars <- code %>%
@@ -48,7 +48,7 @@ parse_acs_vars <- function(file) {
         rlang::eval_tidy()
     }) %>%
     purrr::flatten_chr() %>%
-    # fix problems from expressions like: acs_sum("b01001_e{1:2}", "b01001_e{4:5}")
+    # fix problems from expressions like: acs_est_sum("b01001_e{1:2}", "b01001_e{4:5}")
     purrr::map(stringr::str_split, pattern = ",") %>%
     purrr::flatten() %>%
     purrr::flatten_chr() %>%

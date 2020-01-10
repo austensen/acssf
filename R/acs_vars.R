@@ -67,7 +67,7 @@ pad_transformer <- function(code, envir) {
 #' acs_drop_vars(df, "margins")
 #'
 #' df %>%
-#'   mutate(foo = acs_sum("b25070_e{1:2*}")) %>%
+#'   mutate(foo = acs_est_sum("b25070_e{1:2*}")) %>%
 #'   acs_drop_vars("all")
 #'
 #' @export

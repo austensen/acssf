@@ -11,7 +11,7 @@ parse_acs_vars(file)
 ACS-SF data.
 Should include ACS variables using the format \code{b01001_e001}
 for estimates, \code{b01001_m001} for margins, and \code{b01001_se001} for standard
-errors. Use of \code{\link[=acs_sum]{acs_sum()}} to specify variables will also be correctly
+errors. Use of \code{\link[=acs_est_sum]{acs_est_sum()}} to specify variables will also be correctly
 parsed.}
 }
 \description{
