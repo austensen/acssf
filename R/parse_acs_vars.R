@@ -38,7 +38,7 @@ parse_acs_vars <- function(file) {
   # code with acssf::acs_vars() to get the full set of variable names.
 
   sequence_vars <- code %>%
-    stringr::str_extract_all('\\"[bc].*\\"') %>%
+    stringr::str_extract_all('\\"[bc].*?\\"') %>%
     purrr::flatten_chr() %>%
     stringr::str_replace_all('\\"', '') %>%
     unique() %>%
@@ -48,7 +48,7 @@ parse_acs_vars <- function(file) {
         rlang::eval_tidy()
     }) %>%
     purrr::flatten_chr() %>%
-    # fix problems from expressions like: acs_est_sum("b01001_e{1:2}", "b01001_e{4:5}")
+    # fix problems from expressions like: acs_est_sum("b01001_e{1:2*}", "b01001_e{4:5*}")
     purrr::map(stringr::str_split, pattern = ",") %>%
     purrr::flatten() %>%
     purrr::flatten_chr() %>%
