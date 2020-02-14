@@ -83,9 +83,9 @@ validate_args <- function(year, span, overwrite = NULL, sum_levels = NULL) {
               {glue::glue_collapse(bad_sum_levels, ',')}
               See acssf::sum_level_info for available sum_levels.")
 
-    if (any(sum_levels %in% c("140", "150")) && span != 5) {
-      stop_glue("Tract (140) and Block Group (150) sum levels are only \\
-                available for 5-year data.")
+    if (any(sum_levels %in% c("140", "150", "860")) && span != 5) {
+      stop_glue("Tract (140), Block Group (150), and Zip Code Tabulation Area (860) \\
+                sum levels are only available for 5-year data.")
     }
   }
 }
