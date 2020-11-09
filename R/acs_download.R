@@ -83,7 +83,8 @@ download_docs <- function(docs_dir, year, span) {
       year == 2009 && span == 5L  ~ glue_chr("{base_url}/{span}_year/user_tools/Sequence_Number_and_Table_Number_Lookup.xls"),
       year %in% 2010:2012         ~ glue_chr("{base_url}/{span}_year/user_tools/Sequence_Number_and_Table_Number_Lookup.xls"),
       year %in% 2013:2017         ~ glue_chr("{base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.xls"),
-      year >= 2018                ~ glue_chr("{base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.csv")
+      year == 2018                ~ glue_chr("{base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.csv"),
+      year >= 2019                ~ glue_chr("{base_url}/user_tools/ACS_{span}yr_Seq_Table_Number_Lookup.txt")
     )
 
     # standardize when saving local copy for easier lookup later

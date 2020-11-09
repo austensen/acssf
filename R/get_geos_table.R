@@ -51,6 +51,7 @@ make_geos_table <- function(data_dir, docs_dir, year, span, geo_abb) {
     )
 
     geo_abb <- match_sheet_case(geo_abb, excel_geo_file)
+    message(geo_abb)
 
     geos_table_raw <- excel_geo_file %>%
       readxl::read_excel(sheet = geo_abb, col_types = "text") %>%

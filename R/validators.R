@@ -23,7 +23,7 @@ swap_geo_id <- function(geo, span, type = c("name", "abb", "fips")) {
   }
 
   ret <- fips_abb_name_table %>%
-    dplyr::filter_at(c("abb", "fips"), dplyr::any_vars(. == geo)) %>%
+    dplyr::filter(abb == geo | fips == geo) %>%
     dplyr::pull(type)
 
   if (length(ret) != 1) {

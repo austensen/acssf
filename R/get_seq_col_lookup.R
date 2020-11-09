@@ -84,7 +84,7 @@ make_seq_col_lookup <- function(docs_dir, year) {
 
     seq_table_file <- fs::dir_ls(docs_dir, regexp = ".*seq_table_lookup.*")
 
-    if (fs::path_ext(seq_table_file) == "csv") {
+    if (fs::path_ext(seq_table_file) %in% c("csv", "txt")) {
       seq_table_raw <- readr::read_csv(seq_table_file, col_types = readr::cols(.default = "c"))
     } else {
       seq_table_raw <- readxl::read_excel(seq_table_file, col_types = "text")
